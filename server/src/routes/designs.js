@@ -17,6 +17,8 @@ const router = Router();
 
 router.post('/', async (req, res) => {
     // Step 1 — Get data sent from React
+    const emp_id = req.user.emp_id;
+
     const { inputs, results } = req.body;
 
     // Step 2 — Basic validation
@@ -32,13 +34,13 @@ router.post('/', async (req, res) => {
                  mu, vu, b, d_total, cover, fck, fy,
                  mulim, ast_req, pt_req, ast_prov, pt_prov, stirrup_spacing,
                  mu_check, steel_check, stirrup_check, shear_section_ok,
-                 bar1_count, bar1_dia, bar2_count, bar2_dia)
+                 bar1_count, bar1_dia, bar2_count, bar2_dia, user_id)
              VALUES
                 ($1,  $2,
                  $3,  $4,  $5,  $6,  $7,  $8,  $9,
                  $10, $11, $12, $13,
                  $14, $15, $16, $17,
-                 $18, $19, $20, $21, $22, $23)
+                 $18, $19, $20, $21, $22, $23, $24)
              RETURNING *`,
             [
                 // Identification
@@ -72,7 +74,8 @@ router.post('/', async (req, res) => {
                 inputs.bar1Count,         // $20
                 inputs.bar1Dia,           // $21
                 inputs.bar2Count,         // $22
-                inputs.bar2Dia            // $23
+                inputs.bar2Dia,           // $23
+                emp_id                   // $24
             ]
         );
 

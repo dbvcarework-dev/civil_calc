@@ -78,7 +78,7 @@ const WindLoadCalc = () => {
 
                     <div className="flex items-center gap-3">
                         <div className="ml-auto">
-                            <a href="/saved-windload"
+                            <a href="/app/wind-load-calc/saved"
                                 className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-white hover:bg-gray-50 text-gray-700 transition-all duration-200 border border-gray-200 shadow-sm">
                                 ← Saved Designs
                             </a>

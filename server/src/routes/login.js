@@ -27,12 +27,22 @@ router.post('/', async (req, res) => {
         { expiresIn: '24h' }
     );
 
-    res.cookie('token', token);
+    res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    });
 
     res.status(200).json({
         message: 'Login successful',
         user: { id: user.id, name: user.name, emp_id: user.emp_id }
     });
+});
+
+router.post('/logout', (req, res) => {
+    res.clearCookie('token');
+    res.status(200).json({ message: 'Logged out successfully' });
 });
 
 router.get('/', async (req, res) => {

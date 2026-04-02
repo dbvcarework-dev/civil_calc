@@ -10,6 +10,9 @@ const windloadDesignRoutes = require('./src/routes/windloadDesigns');
 const userRoutes = require('./src/routes/users');
 const loginRoutes = require('./src/routes/login');
 const pool = require('./src/db');
+const cookieParser = require('cookie-parser');
+const auth = require('./src/middleware/auth');
+
 
 
 pool.connect().then(() => {
@@ -21,19 +24,25 @@ pool.connect().then(() => {
 const app = express();
 
 // ── Middleware ──────────────────────────────────────────
-app.use(cors());           // allow all origins (fine for local dev)
+app.use(cors({
+    origin: 'http://localhost:5173', // or your frontend URL
+    credentials: true
+}));           // allow all origins (fine for local dev)
 app.use(express.json());   // parse JSON request bodies
+app.use(cookieParser());
+
 
 // ── Routes ──────────────────────────────────────────────
 
-app.use('/api/saveddesigns', designRoutes);
-app.use('/api/tankdesigns', tankDesignRoutes);
-app.use('/api/windload', windloadDesignRoutes);
+app.use('/api/saveddesigns', auth, designRoutes);
+app.use('/api/tankdesigns', auth, tankDesignRoutes);
+app.use('/api/windload', auth, windloadDesignRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/login', loginRoutes);
 
-app.get('/api/saved-designs', async (req, res) => {
-    const { rows } = await pool.query('SELECT * FROM beam_designs ORDER BY created_at DESC');
+app.get('/api/saved-designs', auth, async (req, res) => {
+    const emp_id = req.user.emp_id;
+    const { rows } = await pool.query('SELECT * FROM beam_designs WHERE user_id = $1 ORDER BY created_at DESC', [emp_id]);
     res.status(200).json({
         message: 'Designs fetched successfully',
         data: rows

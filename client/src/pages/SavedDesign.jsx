@@ -53,7 +53,8 @@ const COLUMNS = [
     { label: 'Steel', tag: 'RESULT', render: r => <CheckBadge ok={r.steel_check === 'OK'} /> },
     { label: 'Shear', tag: 'RESULT', render: r => <CheckBadge ok={r.stirrup_check === 'OK'} /> },
     { label: 'Section', tag: 'RESULT', render: r => <CheckBadge ok={r.shear_section_ok} /> },
-    { label: 'Saved At', tag: 'INPUT', render: r => fmtDate(r.created_at) },
+    { label: 'User ID', render: r => r.user_id },
+    { label: 'Saved At', render: r => fmtDate(r.created_at) },
 
 ]
 
@@ -61,27 +62,27 @@ const COLUMNS = [
 
 // ── Excel column definitions (plain-text values only) ────────
 const EXCEL_COLUMNS = [
-    { header: 'Beam Name',        value: r => r.beam_name },
-    { header: 'Position',         value: r => r.beam_type },
-    { header: 'b (mm)',           value: r => r.b },
-    { header: 'D Total (mm)',     value: r => r.d_total },
-    { header: 'Mu (kN·m)',        value: r => r.mu },
-    { header: 'Mulim (kN·m)',     value: r => r.mulim != null ? Number(r.mulim).toFixed(1) : '' },
-    { header: 'Pt Req',           value: r => r.pt_req != null ? Number(r.pt_req).toFixed(3) : '' },
-    { header: 'Ast Req (mm²)',    value: r => r.ast_req != null ? Number(r.ast_req).toFixed(1) : '' },
-    { header: 'Bar 1 Count',      value: r => r.bar1_count ?? '' },
-    { header: 'Bar 1 Dia (mm)',   value: r => r.bar1_dia ?? '' },
-    { header: 'Bar 2 Count',      value: r => r.bar2_count ?? '' },
-    { header: 'Bar 2 Dia (mm)',   value: r => r.bar2_dia ?? '' },
-    { header: 'Ast Prov (mm²)',   value: r => r.ast_prov != null ? Number(r.ast_prov).toFixed(1) : '' },
-    { header: 'Pt Prov',          value: r => r.pt_prov != null ? Number(r.pt_prov).toFixed(3) : '' },
-    { header: 'Vu (kN)',          value: r => r.vu },
+    { header: 'Beam Name', value: r => r.beam_name },
+    { header: 'Position', value: r => r.beam_type },
+    { header: 'b (mm)', value: r => r.b },
+    { header: 'D Total (mm)', value: r => r.d_total },
+    { header: 'Mu (kN·m)', value: r => r.mu },
+    { header: 'Mulim (kN·m)', value: r => r.mulim != null ? Number(r.mulim).toFixed(1) : '' },
+    { header: 'Pt Req', value: r => r.pt_req != null ? Number(r.pt_req).toFixed(3) : '' },
+    { header: 'Ast Req (mm²)', value: r => r.ast_req != null ? Number(r.ast_req).toFixed(1) : '' },
+    { header: 'Bar 1 Count', value: r => r.bar1_count ?? '' },
+    { header: 'Bar 1 Dia (mm)', value: r => r.bar1_dia ?? '' },
+    { header: 'Bar 2 Count', value: r => r.bar2_count ?? '' },
+    { header: 'Bar 2 Dia (mm)', value: r => r.bar2_dia ?? '' },
+    { header: 'Ast Prov (mm²)', value: r => r.ast_prov != null ? Number(r.ast_prov).toFixed(1) : '' },
+    { header: 'Pt Prov', value: r => r.pt_prov != null ? Number(r.pt_prov).toFixed(3) : '' },
+    { header: 'Vu (kN)', value: r => r.vu },
     { header: 'Stirrup Sp. (mm)', value: r => r.stirrup_spacing },
-    { header: 'Moment Check',     value: r => r.mu_check === 'OK' ? 'OK' : 'Fail' },
-    { header: 'Steel Check',      value: r => r.steel_check === 'OK' ? 'OK' : 'Fail' },
-    { header: 'Shear Check',      value: r => r.stirrup_check === 'OK' ? 'OK' : 'Fail' },
-    { header: 'Section Check',    value: r => r.shear_section_ok ? 'OK' : 'Fail' },
-    { header: 'Saved At',         value: r => fmtDate(r.created_at) },
+    { header: 'Moment Check', value: r => r.mu_check === 'OK' ? 'OK' : 'Fail' },
+    { header: 'Steel Check', value: r => r.steel_check === 'OK' ? 'OK' : 'Fail' },
+    { header: 'Shear Check', value: r => r.stirrup_check === 'OK' ? 'OK' : 'Fail' },
+    { header: 'Section Check', value: r => r.shear_section_ok ? 'OK' : 'Fail' },
+    { header: 'Saved At', value: r => fmtDate(r.created_at) },
 ];
 
 // ── Page ──────────────────────────────────────────────────
@@ -241,7 +242,7 @@ export default function SavedDesign() {
                             </svg>
                             Export Excel
                         </button>
-                        <a href="/"
+                        <a href="/app/beam-design"
                             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-white hover:bg-gray-50 text-gray-700 transition-all duration-200 border border-gray-200 shadow-sm">
                             ← Calculator
                         </a>

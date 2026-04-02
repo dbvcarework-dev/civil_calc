@@ -195,7 +195,7 @@ export default function SavedTankDesigns() {
                             </svg>
                             Export Excel
                         </button>
-                        <a href="/tank-foundation"
+                        <a href="/app/tank-foundation"
                             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-white hover:bg-gray-50 text-gray-700 transition-all duration-200 border border-gray-200 shadow-sm">
                             ← Calculator
                         </a>

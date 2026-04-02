@@ -186,7 +186,7 @@ export default function SavedWindLoad() {
                             </svg>
                             Export Excel
                         </button>
-                        <a href="/wind-load-calc"
+                        <a href="/app/wind-load-calc"
                             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-white hover:bg-gray-50 text-gray-700 transition-all duration-200 border border-gray-200 shadow-sm">
                             ← Calculator
                         </a>

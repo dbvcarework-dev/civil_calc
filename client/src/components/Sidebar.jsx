@@ -2,9 +2,15 @@ import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 
 const navLinkClasses = ({ isActive }) =>
-    `flex items-center px-4 py-3 rounded-xl font-medium transition-all duration-200 mb-2 ${isActive
+    `flex items-center px-4 py-2.5 rounded-xl font-medium transition-all duration-200 ${isActive
         ? 'bg-emerald-50 text-emerald-700 shadow-sm border border-emerald-100/50 relative after:absolute after:left-0 after:top-1/2 after:-translate-y-1/2 after:w-1 after:h-6 after:bg-emerald-600 after:rounded-r-md'
         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 border border-transparent'
+    }`;
+
+const subLinkClasses = ({ isActive }) =>
+    `flex items-center pl-12 pr-4 py-2 rounded-lg text-xs font-medium transition-all duration-200 ${isActive
+        ? 'text-emerald-700 font-semibold'
+        : 'text-gray-400 hover:text-gray-700 hover:bg-gray-50'
     }`;
 
 const Sidebar = () => {
@@ -44,54 +50,45 @@ const Sidebar = () => {
                             <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Engineering</p>
                         </div>
                     </div>
-                    <button
-                        onClick={() => setIsOpen(false)}
-                        className="lg:hidden p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                    >
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
                 </div>
 
                 {/* Navigation Links */}
-                <nav className="flex-1 px-4 py-8 overflow-y-auto custom-scrollbar">
+                <nav className="flex-1 px-4 py-6 overflow-y-auto custom-scrollbar">
 
-                    <div className="mb-6">
-                        <p className="px-2 text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                    {/* Section: RCC */}
+                    <div className="mb-4">
+                        <p className="px-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
                             <span>RCC Structures</span>
-                            <span className="h-px bg-gray-100 flex-1"></span>
                         </p>
-
-                        <NavLink to="/" onClick={() => setIsOpen(false)} className={navLinkClasses}>
+                        <NavLink to="/app/beam-design" end onClick={() => setIsOpen(false)} className={navLinkClasses}>
                             <svg className="w-5 h-5 mr-3 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                             </svg>
                             Beam Design
                         </NavLink>
+
                     </div>
 
-                    <div>
-                        <p className="px-2 text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                    {/* Section: Foundation */}
+                    <div className="mb-4">
+                        <p className="px-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
                             <span>Foundation</span>
-                            <span className="h-px bg-gray-100 flex-1"></span>
                         </p>
-
-                        <NavLink to="/tank-foundation" onClick={() => setIsOpen(false)} className={navLinkClasses}>
+                        <NavLink to="/app/tank-foundation" end onClick={() => setIsOpen(false)} className={navLinkClasses}>
                             <svg className="w-5 h-5 mr-3 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
                             </svg>
                             Tank Foundation
                         </NavLink>
+
                     </div>
 
-                    <div className="mt-6">
-                        <p className="px-2 text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                            <span>Wind Loads</span>
-                            <span className="h-px bg-gray-100 flex-1"></span>
+                    {/* Section: Wind Loads */}
+                    <div className="mb-4">
+                        <p className="px-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                            <span>Analysis</span>
                         </p>
-
-                        <NavLink to="/wind-load-calc" onClick={() => setIsOpen(false)} className={navLinkClasses}>
+                        <NavLink to="/app/wind-load-calc" end onClick={() => setIsOpen(false)} className={navLinkClasses}>
                             <svg className="w-5 h-5 mr-3 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z" />
@@ -99,15 +96,14 @@ const Sidebar = () => {
                             Wind Load (IS:875)
                         </NavLink>
 
-
                     </div>
                 </nav>
 
                 {/* Bottom Section */}
                 <div className="p-5 border-t border-gray-50 bg-gray-50/50 mt-auto shrink-0">
-                    <div className="flex items-center justify-between text-xs font-semibold text-gray-400">
-                        <span>CivilCalc</span>
-                        <span className="px-2 py-1 bg-white rounded-md shadow-sm border border-gray-100">v1.2.0</span>
+                    <div className="flex items-center justify-between text-[10px] font-bold text-gray-400">
+                        <span>CIVIL CALC</span>
+                        <NavLink to="/" className="text-red-400 bg-red-200/50 px-4 py-1 rounded-sm hover:text-red-700">LOGOUT</NavLink>
                     </div>
                 </div>
             </aside>
