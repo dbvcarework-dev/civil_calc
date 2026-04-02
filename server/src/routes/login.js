@@ -27,10 +27,11 @@ router.post('/', async (req, res) => {
         { expiresIn: '24h' }
     );
 
-    res.status(200).json({ 
-        message: 'Login successful', 
-        token, 
-        user: { id: user.id, name: user.name, emp_id: user.emp_id } 
+    res.cookie('token', token);
+
+    res.status(200).json({
+        message: 'Login successful',
+        user: { id: user.id, name: user.name, emp_id: user.emp_id }
     });
 });
 
