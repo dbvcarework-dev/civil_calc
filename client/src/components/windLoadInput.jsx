@@ -21,7 +21,7 @@ const InputNum = ({ id, value, onChange, min, placeholder }) => (
             if (min !== undefined && min !== 0 && raw !== '' && Number(raw) < min) {
                 // Not returning early here to allow user to type negative signs initially
                 if (raw !== '-') {
-                  // Wait, actually let them just type it and we coerce in calc.
+                    // Wait, actually let them just type it and we coerce in calc.
                 }
             }
             onChange(e); // Pass the synthetic event through so `set(key)(e)` captures `e.target.value`
@@ -143,16 +143,16 @@ const WindLoadInput = ({ inputs, onChange, results }) => {
                     <div>
                         <GroupTitle>Structure Dimensions</GroupTitle>
                         <div className="grid grid-cols-3 gap-4">
-                        {[
-                            { id: 'H', label: 'H — Height (m)', key: 'H' },
-                            { id: 'W', label: 'W — Width (m)', key: 'W' },
-                            { id: 'L', label: 'L — Length (m)', key: 'L' },
-                        ].map(({ id, label, key }) => (
-                            <div key={id}>
-                                <Label>{label}</Label>
-                                <InputNum id={id} value={inputs[key]} onChange={set(key)} min={0} step={0.1} />
-                            </div>
-                        ))}
+                            {[
+                                { id: 'H', label: 'H — Height (m)', key: 'H' },
+                                { id: 'W', label: 'W — Width (m)', key: 'W' },
+                                { id: 'L', label: 'L — Length (m)', key: 'L' },
+                            ].map(({ id, label, key }) => (
+                                <div key={id}>
+                                    <Label>{label}</Label>
+                                    <InputNum id={id} value={inputs[key]} onChange={set(key)} min={0} step={0.1} />
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>
@@ -225,14 +225,14 @@ const WindLoadInput = ({ inputs, onChange, results }) => {
                         </div>
                         <div>
                             <Label>K2 Value (Override)</Label>
-                            <InputNum id="k2Custom" value={inputs.k2Custom} onChange={set('k2Custom')} placeholder={results?.k2Auto != null ? `Auto: ${results.k2Auto.toFixed(3)}` : '—'} step={0.01} />
+                            <InputNum id="k2Custom" value={inputs.k2Custom} onChange={set('k2Custom')} placeholder={results?.k2Auto != null ? `Auto: ${results.k2Auto.toFixed(2)}` : '—'} step={0.01} />
                         </div>
                     </div>
                     <div className="mt-3 flex items-center gap-3 flex-wrap">
-                        <KBadge label="K2 Applied" value={results?.k2 != null ? results.k2.toFixed(3) : null} />
+                        <KBadge label="K2 Applied" value={results?.k2 != null ? results.k2.toFixed(2) : null} />
                         <span className="text-xs text-gray-500">
-                            {inputs.k2Custom && String(inputs.k2Custom).trim() !== '' 
-                                ? 'Custom override applied' 
+                            {inputs.k2Custom && String(inputs.k2Custom).trim() !== ''
+                                ? 'Custom override applied'
                                 : `Auto-interpolated at H = ${inputs.H} m`}
                         </span>
                     </div>
@@ -292,7 +292,7 @@ const WindLoadInput = ({ inputs, onChange, results }) => {
                 <Formula>Pz = 0.6 × Vz² / 1000 &nbsp;(kN/m²)</Formula>
                 {results?.pz != null ? (
                     <div className="bg-gray-50 border border-gray-100 rounded-2xl px-5 py-4 flex items-end gap-2 mt-1">
-                        <span className="text-2xl font-black text-teal-700 font-mono tabular-nums">{results.pz.toFixed(4)}</span>
+                        <span className="text-2xl font-black text-teal-700 font-mono tabular-nums">{results.pz.toFixed(2)}</span>
                         <span className="text-sm font-semibold text-gray-500 mb-0.5">kN/m²</span>
                     </div>
                 ) : (
@@ -340,7 +340,7 @@ const WindLoadInput = ({ inputs, onChange, results }) => {
 
                 {results?.pd != null && (
                     <div className="bg-gray-50 border border-gray-100 rounded-2xl px-5 py-4 flex items-end gap-2">
-                        <span className="text-2xl font-black text-violet-700 font-mono tabular-nums">{results.pd.toFixed(4)}</span>
+                        <span className="text-2xl font-black text-violet-700 font-mono tabular-nums">{results.pd.toFixed(3)}</span>
                         <span className="text-sm font-semibold text-gray-500 mb-0.5">kN/m²</span>
                         {results.pdMinimumGoverns && (
                             <span className="ml-2 text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1">

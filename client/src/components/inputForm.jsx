@@ -103,13 +103,42 @@ const InputForm = ({ inputs, onChange }) => {
                 <Field label="SFR Dia (mm)" id="sfrDia" value={inputs.sfrDia} onChange={set('sfrDia')} />
             </div>
 
+            <p className="group-title">Table 19 Interpolation (Manual)</p>
+            <div className="grid grid-cols-2 gap-3">
+                <div>
+                    <label className="label-text">tc Row 1 (%)</label>
+                    <select
+                        value={inputs.tcRatio1 ?? '0.75'}
+                        onChange={setText('tcRatio1')}
+                        className="input-field"
+                    >
+                        {[0.15, 0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 2.25, 2.50, 2.75, 3.00].map(v => (
+                            <option key={v} value={v}>{v.toFixed(2)} %</option>
+                        ))}
+                    </select>
+                </div>
+                <div>
+                    <label className="label-text">tc Row 2 (%)</label>
+                    <select
+                        value={inputs.tcRatio2 ?? '1.00'}
+                        onChange={setText('tcRatio2')}
+                        className="input-field"
+                    >
+                        {[0.15, 0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 2.25, 2.50, 2.75, 3.00].map(v => (
+                            <option key={v} value={v}>{v.toFixed(2)} %</option>
+                        ))}
+                    </select>
+                </div>
+            </div>
+
             <p className="group-title">Shear Reinforcement (Stirrups)</p>
             <div className="grid grid-cols-2 gap-3">
                 <Field label="Stirrup Dia (mm)" id="stirrupDia" value={inputs.stirrupDia} onChange={set('stirrupDia')} />
                 <Field label="Stirrup Legs" id="stirrupLegs" value={inputs.stirrupLegs} onChange={set('stirrupLegs')} />
                 <Field label="Provided Stirrup Spacing (mm)" id="providedStirrupSpacing" value={inputs.providedStirrupSpacing} onChange={set('providedStirrupSpacing')} />
-
             </div>
+
+
 
 
         </div>

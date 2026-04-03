@@ -33,9 +33,9 @@ export const CITY_VB = [
 // K1 — Risk Coefficient (IS:875 Table 1)
 // Rows: design life, Cols: structure type [Temporary, LowHazard, General, Important]
 const K1_TABLE = {
-  "5":   { Temporary: 0.82, LowHazard: 0.94, General: 1.00, Important: null },
-  "25":  { Temporary: 0.76, LowHazard: 0.92, General: 1.00, Important: null },
-  "50":  { Temporary: 0.73, LowHazard: 0.91, General: 1.00, Important: 1.07 },
+  "5": { Temporary: 0.82, LowHazard: 0.94, General: 1.00, Important: null },
+  "25": { Temporary: 0.76, LowHazard: 0.92, General: 1.00, Important: null },
+  "50": { Temporary: 0.73, LowHazard: 0.91, General: 1.00, Important: 1.07 },
   "100": { Temporary: 0.71, LowHazard: 0.90, General: 1.07, Important: 1.08 },
 };
 
@@ -94,9 +94,9 @@ export function calculateWindLoad(inp) {
   const parsed = { ...inp };
   const numKeys = ['H', 'W', 'L', 'k2Custom', 'k3Custom', 'cpi', 'cpeA', 'cpeB', 'cpeC', 'cpeD'];
   numKeys.forEach(k => {
-      if (parsed[k] !== undefined && parsed[k] !== null && String(parsed[k]).trim() !== '') {
-          parsed[k] = Number(parsed[k]);
-      }
+    if (parsed[k] !== undefined && parsed[k] !== null && String(parsed[k]).trim() !== '') {
+      parsed[k] = Number(parsed[k]);
+    }
   });
 
   const {
@@ -117,7 +117,7 @@ export function calculateWindLoad(inp) {
 
   const k2Auto = getK2(H, terrainCategory);
   const k2 = (k2Custom !== undefined && k2Custom !== null && String(k2Custom).trim() !== '') ? parseFloat(k2Custom) : k2Auto;
-  
+
   const k3 = k3Type === 'flat' ? 1.0 : (parseFloat(k3Custom) || 1.0);
   const k4 = k4Type === 'normal' ? 1.0 : 1.15;
 
@@ -150,17 +150,17 @@ export function calculateWindLoad(inp) {
   }
 
   const cpiVal = parseFloat(cpi) || 0;
-  const hwRatio = W > 0 ? +(H / W).toFixed(3) : null;
-  const lwRatio = W > 0 ? +(L / W).toFixed(3) : null;
+  const hwRatio = W > 0 ? (H / W).toFixed(2) : null;
+  const lwRatio = W > 0 ? (L / W).toFixed(2) : null;
 
   const walls = [
     { name: 'Wall A (Windward Long)', cpe: parseFloat(cpeA) || 0 },
-    { name: 'Wall B (Leeward Long)',  cpe: parseFloat(cpeB) || 0 },
+    { name: 'Wall B (Leeward Long)', cpe: parseFloat(cpeB) || 0 },
     { name: 'Wall C (Windward Short)', cpe: parseFloat(cpeC) || 0 },
-    { name: 'Wall D (Leeward Short)',  cpe: parseFloat(cpeD) || 0 },
+    { name: 'Wall D (Leeward Short)', cpe: parseFloat(cpeD) || 0 },
   ].map(w => ({
     ...w,
-    suction:  +(w.cpe - cpiVal).toFixed(3),
+    suction: +(w.cpe - cpiVal).toFixed(3),
     pressure: +(w.cpe + cpiVal).toFixed(3),
   }));
 

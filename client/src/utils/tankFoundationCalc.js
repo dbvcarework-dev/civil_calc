@@ -710,14 +710,14 @@ export function calculateTankFoundation(inputs) {
 // ─────────────────────────────────────────────────────────────
 export const defaultInputs = {
     tankName: 'Tank 1', tankID: '11.80', bcd: '12.00', totalHeightEqpt: '12.80', liquidLevel: '12.50',
-    waterDensity: '10', liquidDensity: '10',
-    emptyWtTank: '530', operatingWtTank: '12429', hydrotestWtTank: '14664',
-    tankBottomPlateThk: '8', thkSandBitumen: '0.05', thkM30Conc: '0.15', thkM75Conc: '0.075',
-    heightRBAboveGL: '1.0', depthRBBelowGL: '1.4', depthFdnRaft: '0.60',
-    thkRingBeamWall: '0.4', widthRingBeamRaft: '2.0',
-    sbcAtFdnDepth: '190', Ka: '0.36', mu: '0.30',
-    unitWtConcrete: '25', unitWtSand: '18', unitWtSoil: '18',
-    fck: '30', fy: '500',
-    windFx: '416', windM: '2656', seismicFx: '1477', seismicM: '9430'
+    waterDensity: '10.00', liquidDensity: '10.00',
+    emptyWtTank: '530.00', operatingWtTank: '12429.00', hydrotestWtTank: '14664.00',
+    tankBottomPlateThk: '8.00', thkSandBitumen: '0.05', thkM30Conc: '0.15', thkM75Conc: '0.075',
+    heightRBAboveGL: '1.0', depthRBBelowGL: '1.40', depthFdnRaft: '0.60',
+    thkRingBeamWall: '0.40', widthRingBeamRaft: '2.00',
+    sbcAtFdnDepth: '190.00', Ka: '0.36', mu: '0.30',
+    unitWtConcrete: '25.00', unitWtSand: '18.00', unitWtSoil: '18.00',
+    fck: '30.00', fy: '500.00',
+    windFx: '416.00', windM: '2656.00', seismicFx: '1477.00', seismicM: '9430.00'
 };
 

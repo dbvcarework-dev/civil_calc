@@ -172,7 +172,7 @@ const TankResult = ({ result, inputs }) => {
                         <DetailRow label="Dia Of Ring Wall" value={formatVal(conclusion.bcd, 'm')} />
                         <DetailRow label="Ring Wall Thickness" value={formatVal(conclusion.thkRingWall_m, 'm')} />
                         <DetailRow label="Ring Raft Width" value={formatVal(conclusion.widthRingRaft_m, 'm')} />
-                        <DetailRow label="Total Raft Thickness" value={formatVal(conclusion.thkRingRaft_m * 1000, 'mm', 0)} />
+                        <DetailRow label="Total Raft Thickness" value={formatVal(conclusion.thkRingRaft_m, 'm')} />
                         <DetailRow label="Foundation Depth" value={formatVal(conclusion.depthFdn_m, 'm')} />
                     </div>
                 </div>

@@ -9,8 +9,9 @@ const DEFAULT_INPUTS = {
     Mu: '1500', Vu: '940', cover: '77.5', fck: '30', fy: '500',
     b: '500', D: '1000',
     bar1Count: '4', bar1Dia: '32', bar2Count: '3', bar2Dia: '25',
-    stirrupDia: '10', stirrupLegs: '4', providedStirrupSpacing: '175',
-    sfrCount: '3', sfrDia: '15',
+    stirrupDia: '10', stirrupLegs: '4', providedStirrupSpacing: '150',
+    sfrCount: '3', sfrDia: '12',
+    tcRatio1: '0.75', tcRatio2: '1.00',
 }
 
 export default function BeamDesign() {

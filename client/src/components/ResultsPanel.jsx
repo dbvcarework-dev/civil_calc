@@ -66,7 +66,22 @@ const ResultsPanel = ({ results: r }) => {
             {/* Shear */}
             <p className="group-title">Shear</p>
             <Row label="Nominal shear stress τv" value={`${r.tv.toFixed(2)} N/mm²`} />
-            <Row label="τc (from Table 19)" value={`${r.tc.toFixed(2)} N/mm²`} />
+            <div className="bg-gray-50/50 p-2 rounded-lg border border-gray-100 my-1">
+                <div className="flex justify-between text-[10px] text-gray-500 uppercase tracking-wider mb-1 px-1">
+                    <span>Table 19 Interpolation</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-xs border-b border-gray-100 pb-2 mb-2">
+                    <div className="flex justify-between px-1">
+                        <span className="text-gray-500">{Number(r.tcRatio1).toFixed(2)}%:</span>
+                        <span className="font-medium">{r.tcLo.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between px-1 border-l border-gray-100 pl-2">
+                        <span className="text-gray-500">{Number(r.tcRatio2).toFixed(2)}%:</span>
+                        <span className="font-medium">{r.tcHi.toFixed(2)}</span>
+                    </div>
+                </div>
+                <Row label="Calculated τc" value={<span className="text-blue-600 font-bold">{r.tc.toFixed(2)} N/mm²</span>} />
+            </div>
             <Row label="τc,max" value={`${r.tcMax.toFixed(1)} N/mm²`} />
             <Row
                 label="Section Size (Cl. 40.2.3)"

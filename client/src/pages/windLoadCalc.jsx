@@ -14,7 +14,7 @@ const DEFAULT_INPUTS = {
     designLife: '50',
     structureType: 'General',
     terrainCategory: '2',
-    k2Custom: '',
+    k2Custom: '1.05',
     k3Type: 'flat',
     k3Custom: '1.0',
     k4Type: 'normal',

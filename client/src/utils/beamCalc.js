@@ -20,17 +20,26 @@ const TC_MAX = { 15: 2.5, 20: 2.8, 25: 3.1, 30: 3.5, 35: 3.7, 40: 4.0 }
 const MULIM_FACTOR = { 250: 0.149, 415: 0.138, 500: 0.133 }
 
 // ── INTERPOLATION (for tc table lookup) ───────────────
-function getTc(ratio, fck) {
-    const rows = Object.keys(TC_TABLE).map(Number).sort((a, b) => a - b)
+function getTc(ratio, fck, r1, r2) {
     const grade = [15, 20, 25, 30, 35].includes(fck) ? fck : 30
-    const val = Math.min(ratio, 3.0)
-    if (val <= rows[0]) return TC_TABLE[rows[0]][grade]
-    if (val >= rows[rows.length - 1]) return TC_TABLE[rows[rows.length - 1]][grade]
-    const lo = rows.filter(r => r <= val).at(-1)
-    const hi = rows.filter(r => r > val)[0]
-    const tcLo = TC_TABLE[lo][grade]
-    const tcHi = TC_TABLE[hi][grade]
-    return tcLo + ((tcHi - tcLo) / (hi - lo)) * (val - lo)
+
+    // Use user-provided bounds if available, else find automatically
+    const lo = r1 ?? 0.75
+    const hi = r2 ?? 1.00
+
+    const tcLo = TC_TABLE[lo]?.[grade] ?? 0.50
+    const tcHi = TC_TABLE[hi]?.[grade] ?? 0.60
+
+    // Linear interpolation
+    const tc = tcLo + ((tcHi - tcLo) / (hi - lo)) * (ratio - lo)
+
+    return {
+        tc,
+        loRatio: lo,
+        hiRatio: hi,
+        loTc: tcLo,
+        hiTc: tcHi
+    }
 }
 
 // ── BAR AREA HELPER ────────────────────────────────────
@@ -91,7 +100,15 @@ export function calculateBeam(inp) {
     r.tv = (Vu * 1000) / (b * r.d)
     r.tcMax = TC_MAX[fck] ?? 3.5
     r.ratio100 = (r.AstProv * 100) / (b * r.d)
-    r.tc = getTc(r.ratio100, fck)
+
+    // tc Calculation details
+    const tcData = getTc(r.ratio100, fck, parsed.tcRatio1, parsed.tcRatio2)
+    r.tc = tcData.tc
+    r.tcLo = tcData.loTc
+    r.tcHi = tcData.hiTc
+    r.tcRatio1 = tcData.loRatio
+    r.tcRatio2 = tcData.hiRatio
+
     r.shearSectionOk = r.tv <= r.tcMax
     r.shearDesign = r.tv > r.tc
     r.Vuc = (r.tc * b * r.d) / 1000
