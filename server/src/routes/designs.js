@@ -1,11 +1,7 @@
 // ── Save Design Route ───────────────────────────────────
 // This file handles ONE thing: saving a beam design to the DB.
 //
-// How it works:
-//   1. React sends POST /api/saveddesigns with { inputs, results }
-//   2. We pull the values we want to store
-//   3. We run an INSERT query into beam_designs table
-//   4. We send back the saved row
+
 
 const { Router } = require('express');
 const pool = require('../db');
@@ -30,52 +26,20 @@ router.post('/', async (req, res) => {
     try {
         const { rows } = await pool.query(
             `INSERT INTO beam_designs
-                (beam_name, beam_type,
-                 mu, vu, b, d_total, cover, fck, fy,
-                 mulim, ast_req, pt_req, ast_prov, pt_prov, stirrup_spacing,
-                 mu_check, steel_check, stirrup_check, shear_section_ok,
-                 bar1_count, bar1_dia, bar2_count, bar2_dia, user_id)
+                (beam_name, beam_type, inputs, results, user_id)
              VALUES
-                ($1,  $2,
-                 $3,  $4,  $5,  $6,  $7,  $8,  $9,
-                 $10, $11, $12, $13,
-                 $14, $15, $16, $17,
-                 $18, $19, $20, $21, $22, $23, $24)
+                ($1,  $2,  $3,  $4,  $5)
              RETURNING *`,
             [
                 // Identification
                 inputs.beamName,          // $1
                 inputs.bendingMomentDirection,          // $2
-
                 // Inputs
-                inputs.Mu,                // $3   Bending Moment
-                inputs.Vu,                // $4   Shear Force
-                inputs.b,                 // $5   Width
-                inputs.D,                 // $6   Total Depth
-                inputs.cover,             // $7   Effective Cover
-                inputs.fck,               // $8   Concrete Grade
-                inputs.fy,                // $9   Steel Grade
-
-                // Key Results
-                results.Mulim,            // $10  Limiting Moment
-                results.AstReq,           // $11  Required Steel Area
-                results.PtReq,            // $12  Required Steel Percentage
-                results.AstProv,          // $13  Provided Steel Area
-                results.PtProv,           // $14  Provided Steel Percentage
-                results.stirrupSpacing,   // $15  Stirrup Spacing
-
-                // Design Checks
-                results.muCheck,          // $16  Flexure check
-                results.steelCheck,       // $17  Steel check
-                results.stirrupCheck,     // $18  Shear check
-                results.shearSectionOk,   // $19  Section size check
-
-                // Reinforcement Details
-                inputs.bar1Count,         // $20
-                inputs.bar1Dia,           // $21
-                inputs.bar2Count,         // $22
-                inputs.bar2Dia,           // $23
-                emp_id                   // $24
+                inputs,                 // $3  
+                // Results
+                results,                // $4   
+                // User ID
+                emp_id                  // $5
             ]
         );
 

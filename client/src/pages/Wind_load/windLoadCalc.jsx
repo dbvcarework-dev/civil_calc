@@ -1,31 +1,60 @@
-import { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import TankInput from '../components/tankInput';
-import TankResult from '../components/tankResult';
-import { calculateTankFoundation, defaultInputs } from '../utils/tankFoundationCalc';
+import WindLoadInput from '../../components/windLoadInput';
+import WindLoadResult from '../../components/windLoadResult';
+import { calculateWindLoad } from '../../utils/windLoadCalc';
 
-const TankFoundation = () => {
-    const [inputs, setInputs] = useState(defaultInputs);
-    const result = calculateTankFoundation(inputs);
+const DEFAULT_INPUTS = {
+    projectName: '',
+    H: '22',
+    W: '20',
+    L: '31.11',
+    city: 'Vadodara',
+    designLife: '50',
+    structureType: 'General',
+    terrainCategory: '2',
+    k2Custom: '1.05',
+    k3Type: 'flat',
+    k3Custom: '1.0',
+    k4Type: 'normal',
+    kd: 'rectangular',
+    kcType: '2',
+    cpi: '0.7',   // "More than 20% openings"
+    cpeA: '0.7',
+    cpeB: '-0.3',
+    cpeC: '-0.7',
+    cpeD: '-0.7',
+};
+
+const WindLoadCalc = () => {
+    const [inputs, setInputs] = useState(DEFAULT_INPUTS);
     const [isSaving, setIsSaving] = useState(false);
     const [saveMessage, setSaveMessage] = useState({ text: '', type: '' });
     const navigate = useNavigate();
+
+    const handleChange = (key, value) => {
+        setInputs(prev => ({ ...prev, [key]: value }));
+    };
+
+    const results = useMemo(() => {
+        return calculateWindLoad(inputs);
+    }, [inputs]);
 
     const handleSave = async () => {
         setIsSaving(true);
         setSaveMessage({ text: '', type: '' });
 
         try {
-            await axios.post('/api/tankdesigns', {
-                tank_name: inputs.tankName || 'Untitled Tank',
+            await axios.post('/api/windload', {
+                project_name: inputs.projectName || 'Untitled Wind Load',
                 inputs,
-                results: result
+                results
             });
             setSaveMessage({ text: 'Design saved successfully!', type: 'success' });
             setTimeout(() => setSaveMessage({ text: '', type: '' }), 3000);
         } catch (error) {
-            console.error('Error saving tank design:', error);
+            console.error('Error saving wind load design:', error);
             setSaveMessage({ text: 'Failed to save design.', type: 'error' });
         } finally {
             setIsSaving(false);
@@ -34,27 +63,22 @@ const TankFoundation = () => {
 
     return (
         <div className="min-h-screen bg-[#f8fafc] flex flex-col font-sans">
-            {/* Header */}
+            {/* Header — matches TankFoundation/BeamDesign */}
             <header className="bg-white border-b border-gray-100 sticky top-0 z-10 shadow-sm">
                 <div className="max-w-7xl mx-auto pl-14 pr-4 sm:pl-16 sm:pr-6 lg:px-8 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-3 sm:gap-4">
-                        <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-xl">
-                            TF
+                        <div className="w-10 h-10 bg-gradient-to-br from-sky-500 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-sm shrink-0">
+                            WL
                         </div>
                         <div>
-                            <h1 className="text-xl font-bold text-gray-900 tracking-tight">Tank Foundation</h1>
-                            <p className="text-sm text-gray-500 font-medium tracking-wide">Ring Beam & Footing Design</p>
+                            <h1 className="text-xl font-bold text-gray-900 tracking-tight">Wind Load Calculator</h1>
+                            <p className="text-sm text-gray-500 font-medium">IS : 875 (Part-3) · Wind Loads on Buildings &amp; Structures</p>
                         </div>
                     </div>
 
                     <div className="flex items-center gap-3">
-                        {/* {saveMessage.text && (
-                            <span className={`text-xs font-medium px-3 py-1.5 rounded-lg hidden sm:inline-block ${saveMessage.type === 'success' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
-                                {saveMessage.text}
-                            </span>
-                        )} */}
                         <div className="ml-auto">
-                            <a href="/app/tank-foundation/saved"
+                            <a href="/app/wind-load-calc/saved"
                                 className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-white hover:bg-gray-50 text-gray-700 transition-all duration-200 border border-gray-200 shadow-sm">
                                 ← Saved Designs
                             </a>
@@ -82,27 +106,26 @@ const TankFoundation = () => {
                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M16 4v4H8V4" />
                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 12a2 2 0 100 4 2 2 0 000-4z" />
                                             </svg>
-                                            <span className="hidden sm:inline">Save Design</span>
+                                            <span className="hidden sm:inline">Save</span>
                                         </>
                             }
                         </button>
-
                     </div>
                 </div>
             </header>
 
-            {/* Main Content Area */}
-            <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-in fade-in duration-500">
+            {/* Main Content */}
+            <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="flex flex-col lg:flex-row gap-8 items-start">
 
-                    {/* Left: Input Area */}
+                    {/* Left — Inputs */}
                     <div className="w-full lg:w-7/12 xl:w-2/3 shrink-0">
-                        <TankInput setInputs={setInputs} inputs={inputs} />
+                        <WindLoadInput inputs={inputs} onChange={handleChange} results={results} />
                     </div>
 
-                    {/* Right: Result Area */}
+                    {/* Right — Results (sticky) */}
                     <div className="w-full lg:w-5/12 xl:w-1/3 lg:sticky lg:top-28">
-                        <TankResult result={result} inputs={inputs} />
+                        <WindLoadResult results={results} inputs={inputs} />
                     </div>
 
                 </div>
@@ -111,4 +134,4 @@ const TankFoundation = () => {
     );
 };
 
-export default TankFoundation;
+export default WindLoadCalc;

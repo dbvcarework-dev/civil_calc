@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import { calculateBeam } from '../utils/beamCalc'
-import ResultsPanel from '../components/ResultsPanel'
-import InputForm from '../components/inputForm'
+import { calculateBeam } from '../../utils/beamCalc'
+import ResultsPanel from '../../components/ResultsPanel'
+import InputForm from '../../components/inputForm'
 
 const DEFAULT_INPUTS = {
     beamName: 'B1', bendingMomentDirection: '',

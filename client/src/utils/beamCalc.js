@@ -77,7 +77,13 @@ export function calculateBeam(inp) {
     // REQUIRED STEEL
     const disc = 1 - (4.6 * Mu * 1e6) / (fck * b * r.d * r.d)
     r.PtReq = disc > 0 ? 50 * (fck / fy) * (1 - Math.sqrt(disc)) : null
+    r.ptPercent = 50 * (fck / fy) *
+        (1 - Math.sqrt(
+            1 - ((4.6 * Mu * Math.pow(10, 6)) / (fck * b * Math.pow(r.d, 2)))
+        ))
+
     r.AstReq = r.PtReq ? (r.PtReq * b * r.d) / 100 : null
+    r.astPercent = (r.AstProv * 100) / (b * r.d)
     r.AstMin = (0.85 * b * r.d) / fy
     r.PtMin = Math.max((r.AstMin * 100) / (b * r.d), 0.27)
 
@@ -91,9 +97,10 @@ export function calculateBeam(inp) {
 
     // SIDE FACE REINF
     r.sfrRequired = D >= 750
-    r.sfrAreaReq = (D * b * 0.001) / 2
+    r.sfrAreaReq = b * D * 0.001
+    r.sfrOneSideAreaReq = r.sfrAreaReq / 2
     r.sfrAreaProv = barArea(sfrDia, sfrCount)
-    r.sfrOk = !r.sfrRequired || r.sfrAreaProv >= r.sfrAreaReq
+    r.sfrOk = !r.sfrRequired || r.sfrAreaProv >= r.sfrOneSideAreaReq
     r.sfrCheck = r.sfrRequired ? (r.sfrOk ? 'OK' : 'Increase SFR') : 'Not required'
 
     // SHEAR
@@ -101,13 +108,15 @@ export function calculateBeam(inp) {
     r.tcMax = TC_MAX[fck] ?? 3.5
     r.ratio100 = (r.AstProv * 100) / (b * r.d)
 
+    r.As = r.AstProv * 100 / (b * D)
+
     // tc Calculation details
-    const tcData = getTc(r.ratio100, fck, parsed.tcRatio1, parsed.tcRatio2)
-    r.tc = tcData.tc
+    const tcData = getTc(r.As, fck, parsed.tcRatio1, parsed.tcRatio2)
     r.tcLo = tcData.loTc
     r.tcHi = tcData.hiTc
     r.tcRatio1 = tcData.loRatio
     r.tcRatio2 = tcData.hiRatio
+    r.tc = r.tcLo + ((r.tcHi - r.tcLo) / (r.tcRatio2 - r.tcRatio1)) * (r.As - r.tcRatio1)
 
     r.shearSectionOk = r.tv <= r.tcMax
     r.shearDesign = r.tv > r.tc
@@ -124,8 +133,12 @@ export function calculateBeam(inp) {
     r.SvMin1 = (0.87 * fy * r.Asv) / (0.4 * b)
 
     // Maximum spacing limits — IS 456 Cl. 26.5.1.5
-    r.SvMax1 = 0.75 * r.d        // ← this was missing
+    r.SvMax1 = 0.75 * D      // ← this was missing
     r.SvMax2 = 300               // ← and this
+
+    r.Sv = (0.87 * fy * r.Asv * r.d) / (r.Vus * 1000)
+
+    r.shearCheck = r.Vusmin > r.Vus ? 'OK' : 'Increase Reinforcement'
 
     // Auto designed spacing
     // Auto designed spacing (kept internally for reference)

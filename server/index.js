@@ -49,6 +49,38 @@ app.get('/api/saved-designs', auth, async (req, res) => {
     })
 });
 
+app.get('/api/saved-designs/:id', auth, async (req, res) => {
+    const { id } = req.params;
+    const { rows } = await pool.query('SELECT * FROM beam_designs WHERE id = $1', [id]);
+
+
+    res.status(200).json({
+        message: 'Design fetched successfully',
+        data: rows[0]
+    })
+});
+
+app.get('/api/saved-windloads/:id', auth, async (req, res) => {
+    const { id } = req.params;
+    const { rows } = await pool.query('SELECT * FROM windload_designs WHERE id = $1', [id]);
+
+
+    res.status(200).json({
+        message: 'Design fetched successfully',
+        data: rows[0]
+    })
+});
+
+app.get('/api/tankdesigns/:id', auth, async (req, res) => {
+    const { id } = req.params;
+    const { rows } = await pool.query('SELECT * FROM tank_designs WHERE id = $1', [id]);
+
+
+    res.status(200).json({
+        message: 'Design fetched successfully',
+        data: rows[0]
+    })
+});
 
 // Health check — open http://localhost:3000 to test the server is running
 app.get('/', async (req, res) => {

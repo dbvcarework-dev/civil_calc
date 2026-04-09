@@ -1,11 +1,14 @@
 
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom'
-import BeamDesign from './pages/BeamDesign'
-import SavedDesign from './pages/SavedDesign'
-import TankFoundation from './pages/TankFoundation'
-import SavedTankDesigns from './pages/SavedTankDesigns'
-import WindLoadCalc from './pages/WindLoadCalc'
-import SavedWindLoad from './pages/SavedWindLoad'
+import BeamDesign from './pages/Beam_design/BeamDesign'
+import SavedDesign from './pages/Beam_design/BeamSummaryView'
+import BeamDetailedView from './pages/Beam_design/BeamDetailedView'
+import TankFoundation from './pages/Tank_foundation/tankFoundation'
+import SavedTankDesigns from './pages/Tank_foundation/TankFoundationSummary'
+import TankFoundationDetailed from './pages/Tank_foundation/TankFoundationDetailed'
+import WindLoadCalc from './pages/Wind_load/windLoadCalc'
+import SavedWindLoad from './pages/Wind_load/WindLoadSummary'
+import WindLoadDetailedView from './pages/Wind_load/WindLoadDetailed'
 import Sidebar from './components/Sidebar'
 import AuthPage from './pages/AuthPage'
 
@@ -38,18 +41,21 @@ const App = () => {
         <Route path="beam-design">
           <Route index element={<BeamDesign />} />
           <Route path="saved" element={<SavedDesign />} />
+          <Route path=":id" element={<BeamDetailedView />} />
         </Route>
 
         {/* Tank Foundation Group */}
         <Route path="tank-foundation">
           <Route index element={<TankFoundation />} />
           <Route path="saved" element={<SavedTankDesigns />} />
+          <Route path=":id" element={<TankFoundationDetailed />} />
         </Route>
 
         {/* Wind Load Group */}
         <Route path="wind-load-calc">
           <Route index element={<WindLoadCalc />} />
           <Route path="saved" element={<SavedWindLoad />} />
+          <Route path=":id" element={<WindLoadDetailedView />} />
         </Route>
       </Route>
 
