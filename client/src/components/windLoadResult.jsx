@@ -100,12 +100,13 @@ const WindLoadResult = ({ results }) => {
                                 <tr className="bg-gray-50">
                                     <th className="text-left px-4 py-3 text-xs font-bold uppercase tracking-wider text-gray-500">Wall</th>
                                     <th className="text-center px-4 py-3 text-xs font-bold uppercase tracking-wider text-gray-500">Cpe</th>
+                                    <th className="text-center px-4 py-3 text-xs font-bold uppercase tracking-wider text-blue-500">
+                                        Pressure<br /><span className="font-normal normal-case tracking-normal text-gray-400">Cpe - Cpi</span>
+                                    </th>
                                     <th className="text-center px-4 py-3 text-xs font-bold uppercase tracking-wider text-red-500">
                                         Suction<br /><span className="font-normal normal-case tracking-normal text-gray-400">Cpe − Cpi</span>
                                     </th>
-                                    <th className="text-center px-4 py-3 text-xs font-bold uppercase tracking-wider text-blue-500">
-                                        Pressure<br /><span className="font-normal normal-case tracking-normal text-gray-400">Cpe + Cpi</span>
-                                    </th>
+
                                 </tr>
                             </thead>
                             <tbody>
@@ -113,11 +114,12 @@ const WindLoadResult = ({ results }) => {
                                     <tr key={i} className="border-t border-gray-100 hover:bg-gray-50/50 transition-colors">
                                         <td className="px-4 py-3 font-medium text-gray-700 text-xs">{w.name}</td>
                                         <td className="px-4 py-3 text-center font-bold font-mono text-gray-700">{w.cpe.toFixed(1)}</td>
-                                        <td className={`px-4 py-3 text-center font-bold font-mono ${w.suction < 0 ? 'text-red-600' : 'text-blue-600'}`}>
-                                            {w.suction.toFixed(1)}
-                                        </td>
+
                                         <td className={`px-4 py-3 text-center font-bold font-mono ${w.pressure < 0 ? 'text-red-600' : 'text-blue-600'}`}>
                                             {w.pressure.toFixed(1)}
+                                        </td>
+                                        <td className={`px-4 py-3 text-center font-bold font-mono ${w.suction < 0 ? 'text-red-600' : 'text-blue-600'}`}>
+                                            {w.suction.toFixed(1)}
                                         </td>
                                     </tr>
                                 ))}

@@ -75,6 +75,7 @@ export function calculateTankFoundation(inputs) {
     // STEP B: EARTHQUAKE LOAD MOMENTS AT FOUNDATION BASE
     // ─────────────────────────────────────────────────────────────
     const eqBMAtBase = seismicFx * (depthRBBelowGL + heightRBAboveGL);
+    r.eqBMAtBase = eqBMAtBase;
     r.seismicFxDesign = seismicFx;
     r.seismicMDesign = seismicM + eqBMAtBase;
 
@@ -100,11 +101,11 @@ export function calculateTankFoundation(inputs) {
     const unitWtSteel = 78.5; // KN/M3
 
     // Total tank bottom plate (full circle, ID = tankID)
-    r.areaTankBottomPlate = PI_EXCEL * tankID * tankID / 4;
-    // = 3.14/4 × 11.8² = 0.785 × 139.24 = 109.303 M²
+    r.areaTankBottomPlate = PI_EXCEL * bcd * bcd / 4;
+    // = 3.14/4 × 12.00² = 0.785 × 144 = 113.04 M²
 
     r.wtTotalBottomPlate = r.areaTankBottomPlate * (tankBottomPlateThk / 1000) * unitWtSteel;
-    // = 109.303 × 0.008 × 78.5 = 68.64 KN
+    // = 113.04 × 0.008 × 78.5 = 71.00 KN
 
     // Annular bottom plate resting on ring beam
     // Inner edge of raft = ID_r = 11, Outer is at bcd inner = 11.2?
@@ -301,6 +302,7 @@ export function calculateTankFoundation(inputs) {
     r.windLoadPerM = windFx / (PI_EXCEL * bcd);
 
     const totalSurcharge = h6_A + h6_B + h6_C + h6_D + r.windLoadPerM;
+    r.totalSurcharge = totalSurcharge;
 
     // 5.2: Surcharge due to confined soil (earth pressure from surcharge)
     r.surcharge_load = totalSurcharge * depthRBBelowGL * Ka;
@@ -326,7 +328,9 @@ export function calculateTankFoundation(inputs) {
 
     // Spacing for 12mm bar:
     const barDia_horiz = 12; // mm
+    r.barDia_horiz = barDia_horiz;
     const barArea_horiz = Math.PI * barDia_horiz ** 2 / 4; // = 113.1 MM²
+    r.barArea_horiz = barArea_horiz;
     r.spacingHoopCalc = barArea_horiz * 1000 / r.astHoopEachFace; // C/C spacing (mm)
     r.spacingHoopProvide = 125; // mm (as per Excel conclusion)
     r.astHoopProvided = barArea_horiz * 1000 / r.spacingHoopProvide;
@@ -346,7 +350,9 @@ export function calculateTankFoundation(inputs) {
     r.astVertTotal = 0.0012 * 1000 * (thkRingBeamWall * 1000);
     r.astVertEachFace = r.astVertTotal / 2;
     const barDia_vert = 12;
+    r.barDia_vert = barDia_vert;
     const barArea_vert = Math.PI * barDia_vert ** 2 / 4;
+    r.barArea_vert = barArea_vert;
     r.spacingVertCalc = barArea_vert * 1000 / r.astVertEachFace;
     r.spacingVertProvide = 150;
     r.astVertProvided = barArea_vert * 1000 / r.spacingVertProvide;
@@ -369,6 +375,7 @@ export function calculateTankFoundation(inputs) {
     const raftD = depthFdnRaft * 1000;
     const raftCover = 50;
     const raftBarDia = 12;
+    r.raftBarDia = raftBarDia;
     r.raftDeProvided = raftD - raftCover - 5; // Excel method
 
     // pt required (IS 456 formula)

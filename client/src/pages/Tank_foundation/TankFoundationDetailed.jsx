@@ -207,7 +207,7 @@ const TankFoundationDetailed = () => {
 
     const handleExport = async (design) => {
         try {
-            const response = await fetch('/tank_foundation_temp.xlsx');
+            const response = await fetch('/tank_foundation_temp2.xlsx');
             const arrayBuffer = await response.arrayBuffer();
 
             const workbook = new ExcelJS.Workbook();
@@ -254,10 +254,12 @@ const TankFoundationDetailed = () => {
             //OUTPUTS________________________________________________
 
             //STEP A
+            worksheet.getCell('J46').value = design?.results?.windBMAtBase;
             worksheet.getCell('C49').value = design?.results?.windFxDesign;
             worksheet.getCell('C51').value = design?.results?.windMDesign;
 
             //STEP B
+            worksheet.getCell('J58').value = design?.results?.eqBMAtBase;
             worksheet.getCell('C56').value = design?.results?.seismicFxDesign;
             worksheet.getCell('C60').value = design?.results?.seismicMDesign;
             worksheet.getCell('C64').value = design?.results?.seismicMDesign;
@@ -280,7 +282,8 @@ const TankFoundationDetailed = () => {
             worksheet.getCell('I99').value = design?.results?.F_wtOutsideSoilPerM;
             worksheet.getCell('I100').value = design?.results?.G_wtInsideSandPerM;
             worksheet.getCell('I101').value = design?.results?.totalLoadPerM;
-            worksheet.getCell('I103').value = design?.results?.totalLoadPerM;
+            worksheet.getCell('J103').value = design?.results?.sbcAfterWL;
+            worksheet.getCell('J106').value = design?.results?.sbcAfterWL;
             worksheet.getCell('G103').value = design?.results?.check1_Pmax_ring;
             worksheet.getCell('G106').value = design?.results?.check1_Pmin_ring;
 
@@ -330,7 +333,7 @@ const TankFoundationDetailed = () => {
             worksheet.getCell('G185').value = design?.results?.FOS_sliding;
 
             //STEP 5
-            worksheet.getCell('C189').value = design?.results?.overturningMoment;
+            worksheet.getCell('C189').value = design?.results?.overturnMoment;
             worksheet.getCell('I192').value = design?.results?.restoringMoment;
             worksheet.getCell('G196').value = design?.results?.FOS_overturning;
 
@@ -339,6 +342,7 @@ const TankFoundationDetailed = () => {
             worksheet.getCell('I205').value = design?.results?.B_basePlatePerM;
             worksheet.getCell('I206').value = design?.results?.C_liquidOnRingPerM;
             worksheet.getCell('I207').value = design?.results?.D_wtRingBeamWallPerM;
+            worksheet.getCell('I208').value = design?.results?.totalSurcharge;
             worksheet.getCell('I210').value = design?.results?.windLoadPerM;
             worksheet.getCell('I212').value = design?.results?.surcharge_load;
             worksheet.getCell('K215').value = design?.results?.surcharge_soil;
@@ -349,9 +353,11 @@ const TankFoundationDetailed = () => {
             worksheet.getCell('I228').value = design?.results?.astMinHorizontal;
             worksheet.getCell('G227').value = design?.results?.astHoopRequired;
             worksheet.getCell('G230').value = design?.results?.astHoopEachFace;
-            worksheet.getCell('G233').value = design?.results?.spacingHoopCalc;
+            worksheet.getCell('G233').value = design?.results?.barArea_horiz;
             worksheet.getCell('G234').value = design?.results?.spacingHoopProvide;
-            worksheet.getCell('C233').value = design?.results?.astHoopProvided;
+            worksheet.getCell('C233').value = design?.results?.barDia_horiz;
+            worksheet.getCell('C234').value = design?.results?.barDia_horiz;
+            worksheet.getCell('C235').value = design?.results?.astHoopProvided;
 
             //STEP 8
             worksheet.getCell('C241').value = design?.results?.sigma_ct;
@@ -365,13 +371,15 @@ const TankFoundationDetailed = () => {
             worksheet.getCell('G257').value = design?.results?.spacingVertCalc;
             worksheet.getCell('G258').value = design?.results?.spacingVertProvide;
             worksheet.getCell('C259').value = design?.results?.astVertProvided;
+            worksheet.getCell('C257').value = design?.results?.barDia_vert;
+            worksheet.getCell('C258').value = design?.results?.barDia_vert;
 
             //STEP 10
             worksheet.getCell('C263').value = design?.results?.check1_Pmax_ring;
             worksheet.getCell('I264').value = design?.results?.raftBM;
             worksheet.getCell('C266').value = design?.results?.raftMu;
             worksheet.getCell('K267').value = design?.results?.raftDeReq;
-            worksheet.getCell('I269').value = null;
+            worksheet.getCell('I269').value = design?.results?.raftDeProvide;
 
             worksheet.getCell('C273').value = design?.results?.pt_req;
             worksheet.getCell('C274').value = design?.results?.pt_min;
@@ -379,6 +387,8 @@ const TankFoundationDetailed = () => {
             worksheet.getCell('G277').value = design?.results?.raftSpacingCalc;
             worksheet.getCell('G278').value = design?.results?.raftSpacingProvide;
             worksheet.getCell('C279').value = design?.results?.raftAstProvided;
+            worksheet.getCell('C277').value = design?.results?.raftBarDia;
+            worksheet.getCell('C278').value = design?.results?.raftBarDia;
 
             //conculsion
             worksheet.getCell('C283').value = design?.results?.conclusion?.bcd;
@@ -395,7 +405,7 @@ const TankFoundationDetailed = () => {
             worksheet.getCell('K104').value = null;
             worksheet.getCell('I107').value = null;
             worksheet.getCell('I108').value = null;
-            worksheet.getCell('I208').value = null;
+
             worksheet.getCell('K120').value = null;
             worksheet.getCell('I123').value = null;
             worksheet.getCell('K132').value = null;
@@ -408,8 +418,8 @@ const TankFoundationDetailed = () => {
             worksheet.getCell('J196').value = null;
             worksheet.getCell('G236').value = null;
             worksheet.getCell('C246').value = null;
-            worksheet.getCell('C257').value = null;
-            worksheet.getCell('C277').value = null;
+
+
             worksheet.getCell('G280').value = null;
             worksheet.getCell('G249').value = null;
             worksheet.getCell('G260').value = null;
@@ -417,120 +427,6 @@ const TankFoundationDetailed = () => {
             worksheet.getCell('G288').value = null;
             worksheet.getCell('G289').value = null;
             worksheet.getCell('G290').value = null;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
             const imageBase64 = await captureDiagram();
             if (imageBase64) {
@@ -541,7 +437,7 @@ const TankFoundationDetailed = () => {
 
                 worksheet.addImage(imageId, {
                     tl: { col: 6, row: 5.4 },   // position 
-                    ext: { width: 420, height: 400 }, // size 
+                    ext: { width: 450, height: 400 }, // size 
                 });
             }
 

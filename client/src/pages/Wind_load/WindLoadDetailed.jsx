@@ -119,7 +119,7 @@ const WindLoadDetailed = () => {
 
     const exportToExcel = async (design) => {
         try {
-            const response = await fetch("/wind_load_temp2.xlsx");
+            const response = await fetch("/wind_load_temp5.xlsx");
             const arrayBuffer = await response.arrayBuffer();
 
             const workbook = new ExcelJS.Workbook();
@@ -141,13 +141,13 @@ const WindLoadDetailed = () => {
                 I15: design.results.kcVal,
                 B19: design.results.cpiVal,
                 C37: -design.results.cpiVal,
-                G37: -design.results.cpiVal,
-                L37: -design.results.cpiVal,
-                Q37: -design.results.cpiVal,
+                H37: -design.results.cpiVal,
+                M37: -design.results.cpiVal,
+                R37: -design.results.cpiVal,
                 C53: design.results.cpiVal,
-                G53: design.results.cpiVal,
-                L53: design.results.cpiVal,
-                Q53: design.results.cpiVal,
+                H53: design.results.cpiVal,
+                M53: design.results.cpiVal,
+                R53: design.results.cpiVal,
 
                 //Results 
                 B6: design.results.vz,
