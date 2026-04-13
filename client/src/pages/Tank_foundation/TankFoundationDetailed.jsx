@@ -282,7 +282,7 @@ const TankFoundationDetailed = () => {
             worksheet.getCell('I99').value = design?.results?.F_wtOutsideSoilPerM;
             worksheet.getCell('I100').value = design?.results?.G_wtInsideSandPerM;
             worksheet.getCell('I101').value = design?.results?.totalLoadPerM;
-            worksheet.getCell('J103').value = design?.results?.sbcAfterWL;
+            worksheet.getCell('I103').value = design?.results?.sbcAfterWL;
             worksheet.getCell('J106').value = design?.results?.sbcAfterWL;
             worksheet.getCell('G103').value = design?.results?.check1_Pmax_ring;
             worksheet.getCell('G106').value = design?.results?.check1_Pmin_ring;
@@ -402,27 +402,27 @@ const TankFoundationDetailed = () => {
 
             //checks 
             worksheet.getCell('J103').value = null;
-            worksheet.getCell('K104').value = null;
-            worksheet.getCell('I107').value = null;
+            worksheet.getCell('K104').value = design?.results?.check1_ring_OK ? "OK" : "CHECK";
+            worksheet.getCell('I107').value = design?.results?.check1_ring_tension ? "(-) PRESSURE" : "(-) NO PRESSURE";
             worksheet.getCell('I108').value = null;
 
-            worksheet.getCell('K120').value = null;
-            worksheet.getCell('I123').value = null;
-            worksheet.getCell('K132').value = null;
-            worksheet.getCell('I135').value = null;
-            worksheet.getCell('K141').value = null;
-            worksheet.getCell('I145').value = null;
-            worksheet.getCell('K161').value = null;
-            worksheet.getCell('I165').value = null;
-            worksheet.getCell('J185').value = null;
-            worksheet.getCell('J196').value = null;
-            worksheet.getCell('G236').value = null;
+            worksheet.getCell('K120').value = design?.results?.check1_inside_OK ? "OK" : "CHECK";
+            worksheet.getCell('I123').value = design?.results?.check1_inside_tension ? "(-) PRESSURE" : "(-) NO PRESSURE";
+            worksheet.getCell('K132').value = design?.results?.check2_ring_OK ? "OK" : "CHECK";
+            worksheet.getCell('I135').value = design?.results?.check2_ring_tension ? "(-) PRESSURE" : "(-) NO PRESSURE";
+            worksheet.getCell('K141').value = design?.results?.check2_inside_OK ? "OK" : "CHECK";
+            worksheet.getCell('I145').value = design?.results?.check2_inside_tension ? "(-) PRESSURE" : "(-) NO PRESSURE";
+            worksheet.getCell('K161').value = design?.results?.check3_inside_OK ? "OK" : "CHECK";
+            worksheet.getCell('I164').value = design?.results?.check3_inside_tension ? "(-) PRESSURE" : "(-) NO PRESSURE";
+            worksheet.getCell('J185').value = design?.results?.sliding_OK ? "OK" : "CHECK";
+            worksheet.getCell('J196').value = design?.results?.overturning_OK ? "OK" : "CHECK";
+            worksheet.getCell('G236').value = design?.results?.astHoopProvided_OK ? "OK" : "CHECK";
             worksheet.getCell('C246').value = null;
 
 
-            worksheet.getCell('G280').value = null;
-            worksheet.getCell('G249').value = null;
-            worksheet.getCell('G260').value = null;
+            worksheet.getCell('G280').value = design?.results?.raft_OK ? "OK" : "CHECK";
+            worksheet.getCell('G249').value = design?.results?.wallThk_OK ? "OK" : "CHECK";
+            worksheet.getCell('G260').value = design?.results?.astVertProvided_OK ? "OK" : "CHECK";
             worksheet.getCell('I164').value = null;
             worksheet.getCell('G288').value = null;
             worksheet.getCell('G289').value = null;

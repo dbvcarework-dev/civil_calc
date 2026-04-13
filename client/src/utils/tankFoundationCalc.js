@@ -221,6 +221,7 @@ export function calculateTankFoundation(inputs) {
     r.check1_Pmax_inside = r.totalInsideLoads_op / r.areaInsideRing + r.windMDesign / r.Z_inside;
     r.check1_Pmin_inside = r.totalInsideLoads_op / r.areaInsideRing - r.windMDesign / r.Z_inside;
     r.check1_inside_OK = r.check1_Pmax_inside <= r.sbcAfterWL;
+    r.check1_inside_tension = r.check1_Pmin_inside < 0;
 
     // ─────────────────────────────────────────────────────────────
     // STEP 2: SOIL PRESSURE — OPERATING + EQ LOAD
@@ -228,10 +229,12 @@ export function calculateTankFoundation(inputs) {
     r.check2_Pmax_ring = r.totalLoadPerM / r.areaAnnularRaft + r.seismicMDesign / r.Z_raft;
     r.check2_Pmin_ring = r.totalLoadPerM / r.areaAnnularRaft - r.seismicMDesign / r.Z_raft;
     r.check2_ring_OK = r.check2_Pmax_ring <= r.sbcAfterEQ;
+    r.check2_ring_tension = r.check2_Pmin_ring < 0;
 
     r.check2_Pmax_inside = r.totalInsideLoads_op / r.areaInsideRing + r.seismicMDesign / r.Z_inside;
     r.check2_Pmin_inside = r.totalInsideLoads_op / r.areaInsideRing - r.seismicMDesign / r.Z_inside;
     r.check2_inside_OK = r.check2_Pmax_inside <= r.sbcAfterEQ;
+    r.check2_inside_tension = r.check2_Pmin_inside < 0;
 
     // ─────────────────────────────────────────────────────────────
     // STEP 3: SOIL PRESSURE — HYDROTEST + 0.75×WIND LOAD
@@ -246,6 +249,7 @@ export function calculateTankFoundation(inputs) {
     r.check3_Pmax_inside = r.totalInsideLoads_HT / r.areaInsideRing + moment_HT / r.Z_inside;
     r.check3_Pmin_inside = r.totalInsideLoads_HT / r.areaInsideRing - moment_HT / r.Z_inside;
     r.check3_inside_OK = r.check3_Pmax_inside <= r.sbcAfterWL;
+    r.check3_inside_tension = r.check3_Pmin_inside < 0;
 
     // ─────────────────────────────────────────────────────────────
     // STEP 4: SLIDING CHECK (Empty condition)
@@ -335,7 +339,7 @@ export function calculateTankFoundation(inputs) {
     r.spacingHoopProvide = 125; // mm (as per Excel conclusion)
     r.astHoopProvided = barArea_horiz * 1000 / r.spacingHoopProvide;
     // = 113.1 × 8 = 904.32 MM² ✓
-
+    r.astHoopProvided_OK = r.astHoopEachFace <= r.astHoopProvided;
     // σct (permissible tensile stress in concrete M30) = 1.2 N/MM²
     const sigma_ct = 1.20;
     r.sigma_ct = sigma_ct;
@@ -356,6 +360,7 @@ export function calculateTankFoundation(inputs) {
     r.spacingVertCalc = barArea_vert * 1000 / r.astVertEachFace;
     r.spacingVertProvide = 150;
     r.astVertProvided = barArea_vert * 1000 / r.spacingVertProvide;
+    r.astVertProvided_OK = r.astVertTotal <= r.astVertProvided;
 
     // ─────────────────────────────────────────────────────────────
     // STEP 10: DESIGN OF RING WALL BASE RAFT
