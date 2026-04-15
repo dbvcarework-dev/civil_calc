@@ -1,8 +1,4 @@
-/**
- * RING BEAM (WALL) TYPE TANK FOUNDATION DESIGN
- * JavaScript calculation functions — extracted from Excel: FIRE_WATER_TANK.xls
- * All units: KN, M, MM, KN/M2 unless noted
- */
+
 
 // ─────────────────────────────────────────────────────────────
 // MAIN FUNCTION — call this with all inputs, get all outputs
@@ -51,6 +47,9 @@ export function calculateTankFoundation(inputs) {
         seismicFx,        // Seismic force at top (KN)        e.g. 1477
         seismicM,         // Seismic moment at top (kN.M)     e.g. 9430
     } = parsed;
+
+    // Guard: if critical inputs are zero/missing, return null (empty state)
+    if (!tankID || !bcd || !totalHeightEqpt || Number(tankID) <= 0 || Number(bcd) <= 0) return null;
 
     const PI = 3.14159265358979;
     const PI_EXCEL = 3.14;
@@ -388,7 +387,8 @@ export function calculateTankFoundation(inputs) {
     r.pt_req = (50 * fck / fy) * (1 - Math.sqrt(1 - (4.6 * Mu_Nmm) / (fck * 1000 * r.raftDeProvided ** 2)));
 
     r.pt_min = 0.12;
-    r.raftAstReq = (r.pt_min / 100) * 1000 * r.raftDeProvided;
+    r.pt_max = Math.max(r.pt_req, r.pt_min);
+    r.raftAstReq = (r.pt_max / 100) * 1000 * r.raftDeProvided;
 
     const raftBarArea = Math.PI * raftBarDia ** 2 / 4;
     r.raftSpacingCalc = raftBarArea * 1000 / r.raftAstReq;

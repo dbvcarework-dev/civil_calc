@@ -95,7 +95,7 @@ const BeamDetailedView = () => {
 
     const exportToExcel = async (design) => {
         // 1. Load the template file
-        const response = await fetch("/beam_temp3.xlsx");
+        const response = await fetch("/beam_temp4.xlsx");
         const arrayBuffer = await response.arrayBuffer();
 
         const workbook = new ExcelJS.Workbook();
@@ -107,21 +107,21 @@ const BeamDetailedView = () => {
         // 2 data mapping to exact cells
         const cellMap = {
             // ── INPUTS 
-            C10: design.inputs.Mu, N9: 175.0,
-            C11: design.inputs.cover, N10: design.inputs.cover,
-            C12: design.inputs.fck, N11: design.inputs.fck,
-            C13: design.inputs.fy, N12: design.inputs.fy,
-            C14: design.inputs.b, N13: design.inputs.b,
-            C15: design.inputs.D, N14: design.inputs.D,
-            C16: design.results.d, N15: design.results.d,
-            C17: design.results.mulimFactor, N16: design.results.mulimFactor,
-            N17: 7,
+            C10: design.inputs.Mu,
+            C11: design.inputs.cover,
+            C12: design.inputs.fck,
+            C13: design.inputs.fy,
+            C14: design.inputs.b,
+            C15: design.inputs.D,
+            C16: design.results.d,
+            C17: design.results.mulimFactor,
+
 
             // ── FLEXURE ──
-            C19: design.results.Mulim.toFixed(2), N18: design.results.Mulim,
-            D20: design.results.muCheck, O19: design.results.muCheck,
-            C23: design.results.PtReq.toFixed(3), N22: design.results.ptPercent,
-            C24: design.results.AstReq.toFixed(2), N23: design.results.ptPercent * design.inputs.b * design.results.d / 100,
+            C19: design.results.Mulim.toFixed(2),
+            D20: design.results.muCheck,
+            C23: design.results.PtReq.toFixed(3),
+            C24: design.results.AstReq.toFixed(2),
             C27: design.results.AstMin,
             C28: design.results.PtMin,
             A29: design.results.steelCheck,
@@ -134,7 +134,7 @@ const BeamDetailedView = () => {
             E37: design.results.steelCheck,
 
             // ── SPACING ──
-            B40: design.results.SvMax1, B41: design.results.SvMax2, B42: 300,
+            B40: design.results.SvMax1, B41: design.results.SvMax2, B42: design.results.minSpacing,
 
             // ── SIDE FACE REINFORCEMENT ──
             A46: design.results.sfrRequired ? 'Yes' : 'No',
@@ -162,10 +162,31 @@ const BeamDetailedView = () => {
             B90: design.inputs.providedStirrupSpacing,
             D81: design.results.shearCheck,
 
-            //
-            M37: 3, N37: 20, O37: 942.48,
-            M38: 0, N38: 20, O38: 0,
-            O40: 942.48
+            //L4 SECTION
+            N9: design.results.O28, R9: design.results.L4,
+            N10: design.inputs.cover,
+            N11: design.inputs.fck,
+            N12: design.inputs.fy,
+            N13: design.inputs.b,
+            N14: design.inputs.D,
+            N15: design.results.d,
+            N16: design.results.mulimFactor,
+            N17: design.results.lenOfBeam,
+            N18: design.results.Mulim,
+            O19: design.results.muCheck,
+            N22: design.results.ptPercent.toFixed(3),
+            N23: design.results.astPercent.toFixed(2),
+
+            //FIGURE 
+            L29: design.results.L29,
+            R27: design.results.R27,
+            M32: design.results.M32,
+            O28: design.results.O28,
+            O32: design.results.O32,
+            M34: design.results.M34,
+            M37: design.results.bar1CountL4, N37: design.results.bar1DiaL4, O37: design.results.O37.toFixed(2),
+            M38: design.results.bar2CountL4, N38: design.results.bar2DiaL4, O38: design.results.O38.toFixed(2),
+            O40: design.results.O40.toFixed(2)
         };
 
 

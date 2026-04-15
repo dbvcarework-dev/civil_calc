@@ -1,5 +1,6 @@
 
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom'
+
 import BeamDesign from './pages/Beam_design/BeamDesign'
 import SavedDesign from './pages/Beam_design/BeamSummaryView'
 import BeamDetailedView from './pages/Beam_design/BeamDetailedView'
@@ -58,7 +59,6 @@ const App = () => {
           <Route path=":id" element={<WindLoadDetailedView />} />
         </Route>
       </Route>
-
       {/* Catch-all Redirect */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

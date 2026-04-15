@@ -31,22 +31,30 @@ export const CITY_VB = [
 ];
 
 // K1 — Risk Coefficient (IS:875 Table 1)
-// Rows: design life, Cols: structure type [Temporary, LowHazard, General, Important]
+// Each design life maps to exactly one structure type.
+// Values keyed by wind speed (Vb in m/s).
 const K1_TABLE = {
-  "5": { Temporary: 0.82, LowHazard: 0.94, General: 1.00, Important: null },
-  "25": { Temporary: 0.76, LowHazard: 0.92, General: 1.00, Important: null },
-  "50": { Temporary: 0.73, LowHazard: 0.91, General: 1.00, Important: 1.07 },
-  "100": { Temporary: 0.71, LowHazard: 0.90, General: 1.07, Important: 1.08 },
+  50: { General: { 33: 1, 39: 1, 44: 1, 47: 1, 50: 1, 55: 1 } },
+  5: { Temporary: { 33: 0.82, 39: 0.76, 44: 0.73, 47: 0.71, 50: 0.70, 55: 0.67 } },
+  25: { LowHazard: { 33: 0.94, 39: 0.92, 44: 0.91, 47: 0.90, 50: 0.90, 55: 0.89 } },
+  100: { Important: { 33: 1.05, 39: 1.06, 44: 1.07, 47: 1.07, 50: 1.08, 55: 1.08 } },
 };
 
-export const DESIGN_LIVES = ["5", "25", "50", "100"];
-export const STRUCTURE_TYPES = ["Temporary", "LowHazard", "General", "Important"];
+export const DESIGN_LIVES = ["50", "5", "25", "100"];
 
-/** Returns K1 value or null if invalid combination */
-export function getK1(designLife, structureType) {
-  const row = K1_TABLE[String(designLife)];
-  if (!row) return null;
-  return row[structureType] ?? null;
+// Map each design-life to its single valid structure type
+export const DESIGN_LIFE_TYPE_MAP = {
+  "50": "General",
+  "5": "Temporary",
+  "25": "LowHazard",
+  "100": "Important",
+};
+
+/** Returns K1 value for given designLife and Vb (auto-resolves structure type) */
+export function getK1(designLife, vb) {
+  const structureType = DESIGN_LIFE_TYPE_MAP[String(designLife)];
+  if (!structureType) return null;
+  return K1_TABLE?.[designLife]?.[structureType]?.[vb] ?? null;
 }
 
 // K2 — Terrain & Height Factor (IS:875 Table 2)
@@ -58,6 +66,7 @@ const K2_VALUES = {
   "4": [0.80, 0.80, 0.80, 0.97, 1.10, 1.20, 1.24, 1.27, 1.28, 1.30, 1.31, 1.32, 1.33, 1.34],
 };
 
+// Moved linearInterpolate above getK1 so it's available for K1 interpolation
 function linearInterpolate(x, x0, x1, y0, y1) {
   if (x1 === x0) return y0;
   return y0 + ((y1 - y0) * (x - x0)) / (x1 - x0);
@@ -110,9 +119,13 @@ export function calculateWindLoad(inp) {
     cpi,
     cpeA, cpeB, cpeC, cpeD,
   } = parsed;
+
+  // Guard: if critical inputs are zero/missing, return null (empty state)
+  if (!H || !W || !L || Number(H) <= 0 || Number(W) <= 0 || Number(L) <= 0) return null;
+
   const vb = CITY_VB.find(c => c.city === city)?.vb ?? null;
 
-  const k1 = getK1(designLife, structureType);
+  const k1 = getK1(designLife, vb);
   const k1Invalid = k1 === null;
 
   const k2Auto = getK2(H, terrainCategory);
@@ -154,10 +167,10 @@ export function calculateWindLoad(inp) {
   const lwRatio = W > 0 ? (L / W).toFixed(2) : null;
 
   const walls = [
-    { name: 'Wall A (Windward Long)', cpe: parseFloat(cpeA) || 0 },
-    { name: 'Wall B (Leeward Long)', cpe: parseFloat(cpeB) || 0 },
-    { name: 'Wall C (Windward Short)', cpe: parseFloat(cpeC) || 0 },
-    { name: 'Wall D (Leeward Short)', cpe: parseFloat(cpeD) || 0 },
+    { name: 'Wall A', cpe: parseFloat(cpeA) || 0 },
+    { name: 'Wall B', cpe: parseFloat(cpeB) || 0 },
+    { name: 'Wall C', cpe: parseFloat(cpeC) || 0 },
+    { name: 'Wall D', cpe: parseFloat(cpeD) || 0 },
   ].map(w => ({
     ...w,
     suction: +(w.cpe - cpiVal).toFixed(3),

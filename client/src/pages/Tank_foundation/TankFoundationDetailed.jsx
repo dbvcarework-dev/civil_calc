@@ -207,7 +207,7 @@ const TankFoundationDetailed = () => {
 
     const handleExport = async (design) => {
         try {
-            const response = await fetch('/tank_foundation_temp2.xlsx');
+            const response = await fetch('/tank_foundation_temp3.xlsx');
             const arrayBuffer = await response.arrayBuffer();
 
             const workbook = new ExcelJS.Workbook();
@@ -282,7 +282,7 @@ const TankFoundationDetailed = () => {
             worksheet.getCell('I99').value = design?.results?.F_wtOutsideSoilPerM;
             worksheet.getCell('I100').value = design?.results?.G_wtInsideSandPerM;
             worksheet.getCell('I101').value = design?.results?.totalLoadPerM;
-            worksheet.getCell('I103').value = design?.results?.sbcAfterWL;
+            worksheet.getCell('J103').value = design?.results?.sbcAfterWL;
             worksheet.getCell('J106').value = design?.results?.sbcAfterWL;
             worksheet.getCell('G103').value = design?.results?.check1_Pmax_ring;
             worksheet.getCell('G106').value = design?.results?.check1_Pmin_ring;
@@ -331,11 +331,15 @@ const TankFoundationDetailed = () => {
             worksheet.getCell('I180').value = design?.results?.totalRestoringWt;
             worksheet.getCell('G182').value = design?.results?.restoringForceSliding;
             worksheet.getCell('G185').value = design?.results?.FOS_sliding;
+            worksheet.getCell('J185').value = design?.results?.sliding_OK ? "OK" : "CHECK";
 
             //STEP 5
             worksheet.getCell('C189').value = design?.results?.overturnMoment;
+            worksheet.getCell('I185').value = 1.5;
+            worksheet.getCell('I196').value = 1.5;
             worksheet.getCell('I192').value = design?.results?.restoringMoment;
             worksheet.getCell('G196').value = design?.results?.FOS_overturning;
+            worksheet.getCell('J196').value = design?.results?.overturning_OK ? "OK" : "CHECK";
 
             //STEP 6
             worksheet.getCell('I204').value = design?.results?.A_selfWtPerM;
@@ -361,8 +365,8 @@ const TankFoundationDetailed = () => {
 
             //STEP 8
             worksheet.getCell('C241').value = design?.results?.sigma_ct;
-            worksheet.getCell('C242').value = design?.results?.wallThkCalc;
-            worksheet.getCell('C247').value = design?.results?.wallThkCalc;
+            worksheet.getCell('C246').value = design?.results?.wallThkCalc;
+            worksheet.getCell('C247').value = design?.results?.wallThkCalc.toFixed(0);
             worksheet.getCell('F247').value = design?.results?.wallThkProvided;
 
             //STEP 9 
@@ -401,32 +405,40 @@ const TankFoundationDetailed = () => {
             worksheet.getCell('C290').value = design?.results?.conclusion?.raftReinf;
 
             //checks 
-            worksheet.getCell('J103').value = null;
-            worksheet.getCell('K104').value = design?.results?.check1_ring_OK ? "OK" : "CHECK";
-            worksheet.getCell('I107').value = design?.results?.check1_ring_tension ? "(-) PRESSURE" : "(-) NO PRESSURE";
-            worksheet.getCell('I108').value = null;
+            // worksheet.getCell('K104').value = design?.results?.check1_ring_OK ? "OK" : "CHECK";
+            // worksheet.getCell('I107').value = design?.results?.check1_ring_tension ? "(-) PRESSURE" : "(-) NO PRESSURE";
+            // worksheet.getCell('I108').value = null;
 
-            worksheet.getCell('K120').value = design?.results?.check1_inside_OK ? "OK" : "CHECK";
-            worksheet.getCell('I123').value = design?.results?.check1_inside_tension ? "(-) PRESSURE" : "(-) NO PRESSURE";
-            worksheet.getCell('K132').value = design?.results?.check2_ring_OK ? "OK" : "CHECK";
-            worksheet.getCell('I135').value = design?.results?.check2_ring_tension ? "(-) PRESSURE" : "(-) NO PRESSURE";
-            worksheet.getCell('K141').value = design?.results?.check2_inside_OK ? "OK" : "CHECK";
-            worksheet.getCell('I145').value = design?.results?.check2_inside_tension ? "(-) PRESSURE" : "(-) NO PRESSURE";
-            worksheet.getCell('K161').value = design?.results?.check3_inside_OK ? "OK" : "CHECK";
-            worksheet.getCell('I164').value = design?.results?.check3_inside_tension ? "(-) PRESSURE" : "(-) NO PRESSURE";
-            worksheet.getCell('J185').value = design?.results?.sliding_OK ? "OK" : "CHECK";
-            worksheet.getCell('J196').value = design?.results?.overturning_OK ? "OK" : "CHECK";
-            worksheet.getCell('G236').value = design?.results?.astHoopProvided_OK ? "OK" : "CHECK";
-            worksheet.getCell('C246').value = null;
+            // worksheet.getCell('K120').value = design?.results?.check1_inside_OK ? "OK" : "CHECK";
+            // worksheet.getCell('I123').value = design?.results?.check1_inside_tension ? "(-) PRESSURE" : "(-) NO PRESSURE";
+            // worksheet.getCell('K132').value = design?.results?.check2_ring_OK ? "OK" : "CHECK";
+            // worksheet.getCell('I135').value = design?.results?.check2_ring_tension ? "(-) PRESSURE" : "(-) NO PRESSURE";
+            // worksheet.getCell('K141').value = design?.results?.check2_inside_OK ? "OK" : "CHECK";
+            // worksheet.getCell('I145').value = design?.results?.check2_inside_tension ? "(-) PRESSURE" : "(-) NO PRESSURE";
+            // worksheet.getCell('K161').value = design?.results?.check3_inside_OK ? "OK" : "CHECK";
+            // worksheet.getCell('I164').value = design?.results?.check3_inside_tension ? "(-) PRESSURE" : "(-) NO PRESSURE";
+            // worksheet.getCell('J185').value = design?.results?.sliding_OK ? "OK" : "CHECK";
+            // worksheet.getCell('J196').value = design?.results?.overturning_OK ? "OK" : "CHECK";
+            // worksheet.getCell('G236').value = design?.results?.astHoopProvided_OK ? "OK" : "CHECK";
+            // worksheet.getCell('C246').value = null;
 
 
-            worksheet.getCell('G280').value = design?.results?.raft_OK ? "OK" : "CHECK";
-            worksheet.getCell('G249').value = design?.results?.wallThk_OK ? "OK" : "CHECK";
-            worksheet.getCell('G260').value = design?.results?.astVertProvided_OK ? "OK" : "CHECK";
-            worksheet.getCell('I164').value = null;
+            // worksheet.getCell('G280').value = design?.results?.raft_OK ? "OK" : "CHECK";
+            // worksheet.getCell('G249').value = design?.results?.wallThk_OK ? "OK" : "CHECK";
+            // worksheet.getCell('G260').value = design?.results?.astVertProvided_OK ? "OK" : "CHECK";
             worksheet.getCell('G288').value = null;
             worksheet.getCell('G289').value = null;
             worksheet.getCell('G290').value = null;
+            worksheet.getCell('J119').value = design?.results?.sbcAfterWL;
+            worksheet.getCell('J122').value = design?.results?.sbcAfterWL;
+            worksheet.getCell('J131').value = design?.results?.sbcAfterEQ;
+            worksheet.getCell('J134').value = design?.results?.sbcAfterEQ;
+            worksheet.getCell('J140').value = design?.results?.sbcAfterEQ;
+            worksheet.getCell('J144').value = design?.results?.sbcAfterEQ;
+            worksheet.getCell('J160').value = design?.results?.sbcAfterEQ;
+            worksheet.getCell('J163').value = design?.results?.sbcAfterEQ;
+
+
 
             const imageBase64 = await captureDiagram();
             if (imageBase64) {

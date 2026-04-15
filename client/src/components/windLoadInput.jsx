@@ -1,5 +1,5 @@
 import React from 'react';
-import { CITY_VB, DESIGN_LIVES, STRUCTURE_TYPES, getK1 } from '../utils/windLoadCalc';
+import { CITY_VB, DESIGN_LIVES, DESIGN_LIFE_TYPE_MAP } from '../utils/windLoadCalc';
 
 // ── Shared primitives matching app theme ──────────────────────────────────────
 
@@ -187,14 +187,14 @@ const WindLoadInput = ({ inputs, onChange, results }) => {
                         <div>
                             <Label>Design Life</Label>
                             <SelectField id="designLife" value={inputs.designLife} onChange={set('designLife')}>
-                                {DESIGN_LIVES.map(y => <option key={y} value={y}>{y} years</option>)}
+                                {DESIGN_LIVES.map(y => <option key={y} value={y}>{y} years — {DESIGN_LIFE_TYPE_MAP[y]}</option>)}
                             </SelectField>
                         </div>
-                        <div>
-                            <Label>Structure Type</Label>
-                            <SelectField id="structureType" value={inputs.structureType} onChange={set('structureType')}>
-                                {STRUCTURE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                            </SelectField>
+                        <div className="flex flex-col justify-end">
+                            <span className="inline-flex items-center gap-1.5 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm">
+                                <span className="font-medium text-gray-500 text-xs">Structure Type</span>
+                                <span className="font-semibold text-gray-800">{DESIGN_LIFE_TYPE_MAP[inputs.designLife] ?? '—'}</span>
+                            </span>
                         </div>
                     </div>
                     <div className="mt-3">
@@ -203,7 +203,7 @@ const WindLoadInput = ({ inputs, onChange, results }) => {
                                 <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
                                 </svg>
-                                Invalid: {inputs.structureType} + {inputs.designLife} yrs not defined in IS:875 Table 1
+                                K1 not available for {inputs.designLife} yrs design life (Vb = {results?.vb ?? '?'} m/s)
                             </div>
                         ) : (
                             <KBadge label="K1" value={results?.k1} />

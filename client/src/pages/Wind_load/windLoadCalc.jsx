@@ -85,7 +85,7 @@ const WindLoadCalc = () => {
                         </div>
                         <button
                             onClick={handleSave}
-                            disabled={isSaving}
+                            disabled={!results || isSaving}
                             className={`
                                 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 text-white
                                 disabled:opacity-40 disabled:cursor-not-allowed
@@ -125,7 +125,19 @@ const WindLoadCalc = () => {
 
                     {/* Right — Results (sticky) */}
                     <div className="w-full lg:w-5/12 xl:w-1/3 lg:sticky lg:top-28">
-                        <WindLoadResult results={results} inputs={inputs} />
+                        {results ? (
+                            <WindLoadResult results={results} inputs={inputs} />
+                        ) : (
+                            <div className="bg-white border-2 border-dashed border-gray-200 rounded-2xl p-12 flex flex-col items-center justify-center text-center shadow-sm">
+                                <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center text-3xl mb-4 border border-gray-100">
+                                    💨
+                                </div>
+                                <h3 className="text-gray-900 font-bold text-lg">No Wind Data</h3>
+                                <p className="text-gray-500 text-sm max-w-[240px] mx-auto mt-2 leading-relaxed">
+                                    Enter the building height and dimensions to calculate the wind pressure.
+                                </p>
+                            </div>
+                        )}
                     </div>
 
                 </div>

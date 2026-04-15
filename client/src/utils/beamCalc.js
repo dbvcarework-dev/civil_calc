@@ -58,15 +58,15 @@ export function calculateBeam(inp) {
     const { Mu, Vu, cover, fck, fy, b, D,
         bar1Count, bar1Dia, bar2Count, bar2Dia,
         stirrupDia, stirrupLegs, providedStirrupSpacing,
-        sfrCount, sfrDia } = parsed
+        sfrCount, sfrDia, } = parsed
 
     const r = {}
 
     // GEOMETRY
-    r.d = D - cover
+    r.d = D - cover // effective depth
 
     // Guard: if critical inputs are zero/missing, return null (empty state)
-    if (!r.d || !fck || !fy || !b) return null                                         // effective depth
+    if (!r.d || !fck || !fy || !b) return null
 
     // FLEXURE
     r.mulimFactor = MULIM_FACTOR[fy] ?? 0.133
@@ -77,13 +77,7 @@ export function calculateBeam(inp) {
     // REQUIRED STEEL
     const disc = 1 - (4.6 * Mu * 1e6) / (fck * b * r.d * r.d)
     r.PtReq = disc > 0 ? 50 * (fck / fy) * (1 - Math.sqrt(disc)) : null
-    r.ptPercent = 50 * (fck / fy) *
-        (1 - Math.sqrt(
-            1 - ((4.6 * Mu * Math.pow(10, 6)) / (fck * b * Math.pow(r.d, 2)))
-        ))
-
     r.AstReq = r.PtReq ? (r.PtReq * b * r.d) / 100 : null
-    r.astPercent = (r.AstProv * 100) / (b * r.d)
     r.AstMin = (0.85 * b * r.d) / fy
     r.PtMin = Math.max((r.AstMin * 100) / (b * r.d), 0.27)
 
@@ -135,10 +129,11 @@ export function calculateBeam(inp) {
     // Maximum spacing limits — IS 456 Cl. 26.5.1.5
     r.SvMax1 = 0.75 * D      // ← this was missing
     r.SvMax2 = 300               // ← and this
+    r.minSpacing = Math.min(r.SvMax1, r.SvMax2)
 
     r.Sv = (0.87 * fy * r.Asv * r.d) / (r.Vus * 1000)
 
-    r.shearCheck = r.Vusmin > r.Vus ? 'OK' : 'Increase Reinforcement'
+
 
     // Auto designed spacing
     // Auto designed spacing (kept internally for reference)
@@ -166,6 +161,40 @@ export function calculateBeam(inp) {
             ? 'OK'
             : `Unsafe — max allowed is ${r.autoSpacing} mm`
     }
+    r.shearCheck = r.Vusmin > r.Vus ? 'OK' : 'Increase Reinforcement'
+
+    //L4 SECTION 
+    r.lenOfBeam = 7;
+    r.L4 = r.lenOfBeam * 1000 / 4;
+    r.M34 = r.L4 / 1000;
+    r.M32 = r.M34 / 2;
+    r.O32 = r.M34 - r.M32;
+    r.R27 = 320;
+    r.L29 = 29.939;
+    const V19 = (r.R27 - r.L29) / r.M34;
+    r.O28 = r.L29 + (V19 * r.M32);
+    r.ptPercent = 50 * (fck / fy) *
+        (1 - Math.sqrt(
+            1 - ((4.6 * r.O28 * Math.pow(10, 6)) / (fck * b * Math.pow(r.d, 2)))
+        ))
+    r.astPercent = (r.ptPercent * b * r.d) / 100
+
+    //Bar provide for L4
+    r.bar1CountL4 = 3;
+    r.bar1DiaL4 = 20;
+    r.bar2CountL4 = 0;
+    r.bar2DiaL4 = 20;
+
+    r.O37 = (Math.PI / 4) * Math.pow(r.bar1DiaL4, 2) * r.bar1CountL4;
+    r.O38 = (Math.PI / 4) * Math.pow(r.bar2DiaL4, 2) * r.bar2CountL4;
+
+    r.O40 = r.O37 + r.O38;
+
+
+
+
+
+
 
     return r    // ← everything is in here, ~25 values
 }
