@@ -12,6 +12,7 @@ const loginRoutes = require('./src/routes/login');
 const pool = require('./src/db');
 const cookieParser = require('cookie-parser');
 const auth = require('./src/middleware/auth');
+require('dotenv').config();
 
 
 

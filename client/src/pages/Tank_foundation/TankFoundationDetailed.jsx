@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import TankResult from '../../components/tankResult';
+import TankInput from '../../components/tankInput';
+import { calculateTankFoundation } from '../../utils/tankFoundationCalc';
 import html2canvas from 'html2canvas';
 import ExcelJS from 'exceljs';
 
@@ -174,6 +176,12 @@ const TankFoundationDetailed = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    // ── Edit-mode state ──────────────────────────────────────
+    const [isEditing, setIsEditing] = useState(false);
+    const [editInputs, setEditInputs] = useState(null);
+    const [isSaving, setIsSaving] = useState(false);
+    const [saveStatus, setSaveStatus] = useState(null); // 'ok' | 'error' | null
+
     useEffect(() => {
         fetchTankDesign();
     }, [id]);
@@ -183,7 +191,6 @@ const TankFoundationDetailed = () => {
             setIsLoading(true);
             const response = await axios.get(`/api/tankdesigns/${id}`, { withCredentials: true });
             setTankDesign(response.data.data || null);
-            console.log(response.data.data);
             setError(null);
         } catch (error) {
             console.error('Error fetching tank design:', error);
@@ -192,6 +199,55 @@ const TankFoundationDetailed = () => {
             setIsLoading(false);
         }
     }
+
+    const handleStartEdit = () => {
+        setEditInputs({ ...tankDesign.inputs });
+        setIsEditing(true);
+        setSaveStatus(null);
+    };
+
+    const handleCancelEdit = () => {
+        setIsEditing(false);
+        setEditInputs(null);
+        setSaveStatus(null);
+    };
+
+    const handleSaveEdit = async () => {
+        const newResults = calculateTankFoundation(editInputs);
+        if (!newResults) {
+            setSaveStatus('error');
+            setTimeout(() => setSaveStatus(null), 3000);
+            return;
+        }
+
+        setIsSaving(true);
+        setSaveStatus(null);
+
+        try {
+            const response = await axios.put(
+                `/api/tankdesigns/${id}`,
+                { inputs: editInputs, results: newResults },
+                { withCredentials: true }
+            );
+            setTankDesign(response.data.data);
+            setIsEditing(false);
+            setEditInputs(null);
+            setSaveStatus('ok');
+            setTimeout(() => setSaveStatus(null), 3000);
+        } catch (err) {
+            console.error('Update failed:', err.message);
+            setSaveStatus('error');
+            setTimeout(() => setSaveStatus(null), 3000);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    // Live-recalculated results when in edit mode
+    const liveResults = isEditing ? calculateTankFoundation(editInputs) : null;
+
+    const displayInputs = isEditing ? editInputs : tankDesign?.inputs;
+    const displayResults = isEditing ? liveResults : tankDesign?.results;
 
     const captureDiagram = async () => {
         const element = document.getElementById('tank-visualization');
@@ -252,7 +308,6 @@ const TankFoundationDetailed = () => {
             worksheet.getCell('C41').value = design?.inputs?.seismicM;
 
             //OUTPUTS________________________________________________
-
             //STEP A
             worksheet.getCell('J46').value = design?.results?.windBMAtBase;
             worksheet.getCell('C49').value = design?.results?.windFxDesign;
@@ -287,8 +342,6 @@ const TankFoundationDetailed = () => {
             worksheet.getCell('G103').value = design?.results?.check1_Pmax_ring;
             worksheet.getCell('G106').value = design?.results?.check1_Pmin_ring;
 
-
-
             //STEP 1
             worksheet.getCell('I111').value = design?.results?.ins_A_wtBottomPlate;
             worksheet.getCell('I112').value = design?.results?.ins_B_liquidWt;
@@ -317,7 +370,7 @@ const TankFoundationDetailed = () => {
             worksheet.getCell('G160').value = design?.results?.check3_Pmax_inside;
             worksheet.getCell('G163').value = design?.results?.check3_Pmin_inside;
 
-            //STEP 4 
+            //STEP 4
             worksheet.getCell('C170').value = design?.results?.seismicFxDesign;
             worksheet.getCell('I171').value = design?.results?.sl_A;
             worksheet.getCell('I172').value = design?.results?.sl_B_ringWall;
@@ -369,7 +422,7 @@ const TankFoundationDetailed = () => {
             worksheet.getCell('C247').value = design?.results?.wallThkCalc.toFixed(0);
             worksheet.getCell('F247').value = design?.results?.wallThkProvided;
 
-            //STEP 9 
+            //STEP 9
             worksheet.getCell('I254').value = design?.results?.astVertTotal;
             worksheet.getCell('C256').value = design?.results?.astVertEachFace;
             worksheet.getCell('G257').value = design?.results?.spacingVertCalc;
@@ -384,7 +437,6 @@ const TankFoundationDetailed = () => {
             worksheet.getCell('C266').value = design?.results?.raftMu;
             worksheet.getCell('K267').value = design?.results?.raftDeReq;
             worksheet.getCell('I269').value = design?.results?.raftDeProvide;
-
             worksheet.getCell('C273').value = design?.results?.pt_req;
             worksheet.getCell('C274').value = design?.results?.pt_min;
             worksheet.getCell('I275').value = design?.results?.raftAstReq;
@@ -394,7 +446,7 @@ const TankFoundationDetailed = () => {
             worksheet.getCell('C277').value = design?.results?.raftBarDia;
             worksheet.getCell('C278').value = design?.results?.raftBarDia;
 
-            //conculsion
+            //conclusion
             worksheet.getCell('C283').value = design?.results?.conclusion?.bcd;
             worksheet.getCell('C284').value = design?.results?.conclusion?.thkRingWall_m;
             worksheet.getCell('C285').value = design?.results?.conclusion?.widthRingRaft_m;
@@ -403,29 +455,6 @@ const TankFoundationDetailed = () => {
             worksheet.getCell('C288').value = design?.results?.conclusion?.horizReinf;
             worksheet.getCell('C289').value = design?.results?.conclusion?.vertReinf;
             worksheet.getCell('C290').value = design?.results?.conclusion?.raftReinf;
-
-            //checks 
-            // worksheet.getCell('K104').value = design?.results?.check1_ring_OK ? "OK" : "CHECK";
-            // worksheet.getCell('I107').value = design?.results?.check1_ring_tension ? "(-) PRESSURE" : "(-) NO PRESSURE";
-            // worksheet.getCell('I108').value = null;
-
-            // worksheet.getCell('K120').value = design?.results?.check1_inside_OK ? "OK" : "CHECK";
-            // worksheet.getCell('I123').value = design?.results?.check1_inside_tension ? "(-) PRESSURE" : "(-) NO PRESSURE";
-            // worksheet.getCell('K132').value = design?.results?.check2_ring_OK ? "OK" : "CHECK";
-            // worksheet.getCell('I135').value = design?.results?.check2_ring_tension ? "(-) PRESSURE" : "(-) NO PRESSURE";
-            // worksheet.getCell('K141').value = design?.results?.check2_inside_OK ? "OK" : "CHECK";
-            // worksheet.getCell('I145').value = design?.results?.check2_inside_tension ? "(-) PRESSURE" : "(-) NO PRESSURE";
-            // worksheet.getCell('K161').value = design?.results?.check3_inside_OK ? "OK" : "CHECK";
-            // worksheet.getCell('I164').value = design?.results?.check3_inside_tension ? "(-) PRESSURE" : "(-) NO PRESSURE";
-            // worksheet.getCell('J185').value = design?.results?.sliding_OK ? "OK" : "CHECK";
-            // worksheet.getCell('J196').value = design?.results?.overturning_OK ? "OK" : "CHECK";
-            // worksheet.getCell('G236').value = design?.results?.astHoopProvided_OK ? "OK" : "CHECK";
-            // worksheet.getCell('C246').value = null;
-
-
-            // worksheet.getCell('G280').value = design?.results?.raft_OK ? "OK" : "CHECK";
-            // worksheet.getCell('G249').value = design?.results?.wallThk_OK ? "OK" : "CHECK";
-            // worksheet.getCell('G260').value = design?.results?.astVertProvided_OK ? "OK" : "CHECK";
             worksheet.getCell('G288').value = null;
             worksheet.getCell('G289').value = null;
             worksheet.getCell('G290').value = null;
@@ -438,8 +467,6 @@ const TankFoundationDetailed = () => {
             worksheet.getCell('J160').value = design?.results?.sbcAfterEQ;
             worksheet.getCell('J163').value = design?.results?.sbcAfterEQ;
 
-
-
             const imageBase64 = await captureDiagram();
             if (imageBase64) {
                 const imageId = workbook.addImage({
@@ -448,8 +475,8 @@ const TankFoundationDetailed = () => {
                 });
 
                 worksheet.addImage(imageId, {
-                    tl: { col: 6, row: 5.4 },   // position 
-                    ext: { width: 450, height: 400 }, // size 
+                    tl: { col: 6, row: 5.4 },
+                    ext: { width: 450, height: 400 },
                 });
             }
 
@@ -470,8 +497,7 @@ const TankFoundationDetailed = () => {
 
     return (
         <div className="min-h-screen bg-[#f8fafc] flex flex-col font-sans">
-            <header
-                className="border-b border-gray-200 bg-white/80 backdrop-blur sticky top-0 z-10 shadow-sm" >
+            <header className="border-b border-gray-200 bg-white/80 backdrop-blur sticky top-0 z-10 shadow-sm">
                 <div className="max-w-7xl mx-auto pl-14 pr-4 sm:pl-16 sm:pr-6 lg:px-8 py-4 flex items-center gap-3 sm:gap-4">
                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xl flex-shrink-0">
                         TF
@@ -481,20 +507,93 @@ const TankFoundationDetailed = () => {
                         <p className="text-xs text-gray-500">Design ID : {id}</p>
                     </div>
 
-                    <div className="ml-auto flex items-center gap-3">
-                        <button onClick={() => handleExport(tankDesign)}
-                            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-white hover:bg-gray-50 text-gray-700  border border-gray-200 shadow-sm">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                            </svg>
-                            Export to Excel
-                        </button>
+                    <div className="ml-auto flex items-center gap-2 sm:gap-3">
+                        {/* Save-status toast */}
+                        {saveStatus === 'ok' && (
+                            <span className="text-xs font-medium text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg">
+                                ✓ Saved!
+                            </span>
+                        )}
+                        {saveStatus === 'error' && (
+                            <span className="text-xs font-medium text-red-600 bg-red-50 border border-red-200 px-3 py-1.5 rounded-lg">
+                                ✗ Save failed
+                            </span>
+                        )}
+
+                        {!isEditing ? (
+                            <>
+                                {/* Edit button */}
+                                <button
+                                    id="edit-tank-btn"
+                                    onClick={handleStartEdit}
+                                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-indigo-600 hover:bg-indigo-500 text-white transition-all duration-200 shadow-sm"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                    <span className="hidden sm:inline">Edit</span>
+                                </button>
+
+                                {/* Export button */}
+                                <button onClick={() => handleExport(tankDesign)}
+                                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 shadow-sm">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                    </svg>
+                                    Export to Excel
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                {/* Cancel button */}
+                                <button
+                                    id="cancel-tank-edit-btn"
+                                    onClick={handleCancelEdit}
+                                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-white hover:bg-gray-50 text-gray-700 transition-all duration-200 border border-gray-200 shadow-sm"
+                                >
+                                    Cancel
+                                </button>
+
+                                {/* Save Changes button */}
+                                <button
+                                    id="save-tank-changes-btn"
+                                    onClick={handleSaveEdit}
+                                    disabled={isSaving || !liveResults}
+                                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 text-white shadow-sm disabled:opacity-40 disabled:cursor-not-allowed
+                                        ${isSaving ? 'bg-indigo-500' : 'bg-emerald-600 hover:bg-emerald-500'}`}
+                                >
+                                    {isSaving ? (
+                                        <>
+                                            <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin flex-shrink-0"></span>
+                                            <span className="hidden sm:inline">Saving…</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V8l-4-4H8z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M16 4v4H8V4" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 12a2 2 0 100 4 2 2 0 000-4z" />
+                                            </svg>
+                                            <span className="hidden sm:inline">Save Changes</span>
+                                        </>
+                                    )}
+                                </button>
+                            </>
+                        )}
+
                         <Link to="/app/tank-foundation/saved"
                             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 shadow-sm">
                             ← Back
                         </Link>
                     </div>
                 </div>
+
+                {/* Edit-mode banner */}
+                {isEditing && (
+                    <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 text-center text-xs text-amber-700 font-medium">
+                        ✏️ Editing mode — modify the inputs on the left. The results panel updates live. Click <strong>Save Changes</strong> to persist.
+                    </div>
+                )}
             </header>
 
             <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -511,15 +610,29 @@ const TankFoundationDetailed = () => {
                     </div>
                 ) : tankDesign ? (
                     <div className="flex flex-col lg:flex-row gap-8 items-start animate-in fade-in slide-in-from-bottom-4 duration-700">
-                        {/* Left Side: Inputs in Report Format */}
+                        {/* Left Side: Inputs */}
                         <div className="w-full lg:w-7/12 xl:w-2/3">
-                            <ReportInputs inputs={tankDesign.inputs} />
-                            <TankVisualization inputs={tankDesign.inputs} />
+                            {isEditing
+                                ? <TankInput inputs={editInputs} setInputs={setEditInputs} />
+                                : <>
+                                    <ReportInputs inputs={tankDesign.inputs} />
+                                    <TankVisualization inputs={tankDesign.inputs} />
+                                </>
+                            }
                         </div>
 
                         {/* Right Side: Results Panel */}
                         <div className="w-full lg:w-5/12 xl:w-1/3 lg:sticky lg:top-24">
-                            <TankResult result={tankDesign.results} inputs={tankDesign.inputs} />
+                            {displayResults
+                                ? <TankResult result={displayResults} inputs={displayInputs} />
+                                : (
+                                    <div className="bg-white border-2 border-dashed border-gray-200 rounded-2xl p-12 flex flex-col items-center justify-center text-center shadow-sm">
+                                        <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center text-3xl mb-4 border border-gray-100">🏗️</div>
+                                        <p className="text-gray-900 font-semibold text-sm">Invalid inputs</p>
+                                        <p className="text-gray-500 text-xs mt-1">Please check the input values to generate results.</p>
+                                    </div>
+                                )
+                            }
                         </div>
                     </div>
                 ) : (

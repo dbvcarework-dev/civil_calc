@@ -1,9 +1,10 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import ResultsPanel from '../../components/ResultsPanel'
+import InputForm from '../../components/inputForm'
 import axios from 'axios'
 import { useState, useEffect } from 'react'
-import * as XLSX from 'xlsx';
-import ExcelJS from 'exceljs';
+import ExcelJS from 'exceljs'
+import { calculateBeam } from '../../utils/beamCalc'
 
 const ReportSection = ({ title, children }) => (
     <div className="mb-6 last:mb-0">
@@ -76,15 +77,20 @@ const BeamDetailedView = () => {
     const [error, setError] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    useEffect(() => {
+    // ── Edit-mode state ──────────────────────────────────────
+    const [isEditing, setIsEditing] = useState(false);
+    const [editInputs, setEditInputs] = useState(null);
+    const [isSaving, setIsSaving] = useState(false);
+    const [saveStatus, setSaveStatus] = useState(null); // 'ok' | 'error' | null
 
+    useEffect(() => {
         fetchDesign();
     }, [id]);
+
     const fetchDesign = async () => {
         try {
             const response = await axios.get(`/api/saved-designs/${id}`, { withCredentials: true });
             setDesign(response.data.data);
-            console.log(response.data.data)
         } catch (err) {
             console.error('Fetch error:', err);
             setError('Failed to load saved design.');
@@ -93,8 +99,57 @@ const BeamDetailedView = () => {
         }
     };
 
+    // Enter edit mode — clone the current inputs into local state
+    const handleStartEdit = () => {
+        setEditInputs({ ...design.inputs });
+        setIsEditing(true);
+        setSaveStatus(null);
+    };
+
+    // Cancel — discard edits
+    const handleCancelEdit = () => {
+        setIsEditing(false);
+        setEditInputs(null);
+        setSaveStatus(null);
+    };
+
+    // Save — recalculate client-side and PUT the full inputs + results
+    const handleSaveEdit = async () => {
+        const newResults = calculateBeam(editInputs);
+        if (!newResults) {
+            setSaveStatus('error');
+            setTimeout(() => setSaveStatus(null), 3000);
+            return;
+        }
+
+        setIsSaving(true);
+        setSaveStatus(null);
+
+        try {
+            const response = await axios.put(
+                `/api/saveddesigns/${id}`,
+                { inputs: editInputs, results: newResults },
+                { withCredentials: true }
+            );
+            // Update local design state with the returned data
+            setDesign(response.data.data);
+            setIsEditing(false);
+            setEditInputs(null);
+            setSaveStatus('ok');
+            setTimeout(() => setSaveStatus(null), 3000);
+        } catch (err) {
+            console.error('Update failed:', err.message);
+            setSaveStatus('error');
+            setTimeout(() => setSaveStatus(null), 3000);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    // Live-recalculated results when in edit mode
+    const liveResults = isEditing ? calculateBeam(editInputs) : null;
+
     const exportToExcel = async (design) => {
-        // 1. Load the template file
         const response = await fetch("/beam_temp4.xlsx");
         const arrayBuffer = await response.arrayBuffer();
 
@@ -102,11 +157,8 @@ const BeamDetailedView = () => {
         await workbook.xlsx.load(arrayBuffer);
         const worksheet = workbook.worksheets[0];
 
-
-
-        // 2 data mapping to exact cells
         const cellMap = {
-            // ── INPUTS 
+            // ── INPUTS
             C10: design.inputs.Mu,
             C11: design.inputs.cover,
             C12: design.inputs.fck,
@@ -115,7 +167,6 @@ const BeamDetailedView = () => {
             C15: design.inputs.D,
             C16: design.results.d,
             C17: design.results.mulimFactor,
-
 
             // ── FLEXURE ──
             C19: design.results.Mulim.toFixed(2),
@@ -177,7 +228,7 @@ const BeamDetailedView = () => {
             N22: design.results.ptPercent.toFixed(3),
             N23: design.results.astPercent.toFixed(2),
 
-            //FIGURE 
+            //FIGURE
             L29: design.results.L29,
             R27: design.results.R27,
             M32: design.results.M32,
@@ -185,10 +236,9 @@ const BeamDetailedView = () => {
             O32: design.results.O32,
             M34: design.results.M34,
             M37: design.results.bar1CountL4, N37: design.results.bar1DiaL4, O37: design.results.O37.toFixed(2),
-            M38: design.results.bar2CountL4, N38: design.results.bar2DiaL4, O38: design.results.O38.toFixed(2),
+            M38: design.results.bar2CountL4, N38: design.results.bar2DiaL4, O38: design.results.O38,
             O40: design.results.O40.toFixed(2)
         };
-
 
         for (const [cellRef, value] of Object.entries(cellMap)) {
             if (value !== undefined && value !== null) {
@@ -207,6 +257,9 @@ const BeamDetailedView = () => {
         window.URL.revokeObjectURL(url);
     }
 
+    // Displayed inputs / results (either live-edited or saved)
+    const displayInputs = isEditing ? editInputs : design?.inputs;
+    const displayResults = isEditing ? liveResults : design?.results;
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -221,17 +274,90 @@ const BeamDetailedView = () => {
                         <p className="text-xs text-gray-500">Beam ID : {id}</p>
                     </div>
 
-                    <div className="ml-auto flex items-center gap-3">
-                        <button onClick={() => exportToExcel(design)}
-                            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-white hover:bg-gray-50 text-gray-700 transition-all duration-200 border border-gray-200 shadow-sm">
-                            Export to Excel
-                        </button>
+                    <div className="ml-auto flex items-center gap-2 sm:gap-3">
+                        {/* Save-status toast */}
+                        {saveStatus === 'ok' && (
+                            <span className="text-xs font-medium text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg">
+                                ✓ Saved!
+                            </span>
+                        )}
+                        {saveStatus === 'error' && (
+                            <span className="text-xs font-medium text-red-600 bg-red-50 border border-red-200 px-3 py-1.5 rounded-lg">
+                                ✗ Save failed
+                            </span>
+                        )}
+
+                        {!isEditing ? (
+                            <>
+                                {/* Edit button */}
+                                <button
+                                    id="edit-design-btn"
+                                    onClick={handleStartEdit}
+                                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-500 text-white transition-all duration-200 shadow-sm"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                    <span className="hidden sm:inline">Edit</span>
+                                </button>
+
+                                {/* Export button */}
+                                <button onClick={() => exportToExcel(design)}
+                                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-white hover:bg-gray-50 text-gray-700 transition-all duration-200 border border-gray-200 shadow-sm">
+                                    Export to Excel
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                {/* Cancel button */}
+                                <button
+                                    id="cancel-edit-btn"
+                                    onClick={handleCancelEdit}
+                                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-white hover:bg-gray-50 text-gray-700 transition-all duration-200 border border-gray-200 shadow-sm"
+                                >
+                                    Cancel
+                                </button>
+
+                                {/* Save Changes button */}
+                                <button
+                                    id="save-changes-btn"
+                                    onClick={handleSaveEdit}
+                                    disabled={isSaving || !liveResults}
+                                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 text-white shadow-sm disabled:opacity-40 disabled:cursor-not-allowed
+                                        ${isSaving ? 'bg-blue-500' : 'bg-emerald-600 hover:bg-emerald-500'}`}
+                                >
+                                    {isSaving ? (
+                                        <>
+                                            <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin flex-shrink-0"></span>
+                                            <span className="hidden sm:inline">Saving…</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V8l-4-4H8z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M16 4v4H8V4" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 12a2 2 0 100 4 2 2 0 000-4z" />
+                                            </svg>
+                                            <span className="hidden sm:inline">Save Changes</span>
+                                        </>
+                                    )}
+                                </button>
+                            </>
+                        )}
+
                         <button onClick={() => navigate(-1)}
                             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-white hover:bg-gray-50 text-gray-700 transition-all duration-200 border border-gray-200 shadow-sm">
                             ← Back
                         </button>
                     </div>
                 </div>
+
+                {/* Edit-mode banner */}
+                {isEditing && (
+                    <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 text-center text-xs text-amber-700 font-medium">
+                        ✏️ Editing mode — modify the inputs on the left. The results panel updates live. Click <strong>Save Changes</strong> to persist.
+                    </div>
+                )}
             </header>
 
             {/* Main content */}
@@ -246,11 +372,25 @@ const BeamDetailedView = () => {
                     </div>
                 ) : design ? (
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-                        {/* Left Side: Inputs in Report Format */}
-                        <ReportInputs inputs={design.inputs} />
+                        {/* Left Side: Inputs */}
+                        {isEditing
+                            ? <InputForm inputs={editInputs} onChange={setEditInputs} />
+                            : <ReportInputs inputs={design.inputs} />
+                        }
 
                         {/* Right Side: Results Panel */}
-                        <ResultsPanel inputs={design.inputs} results={design.results} />
+                        {displayResults
+                            ? <ResultsPanel inputs={displayInputs} results={displayResults} />
+                            : (
+                                <div className="section-card flex flex-col items-center justify-center gap-4 py-16 text-center">
+                                    <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center text-2xl border border-gray-200">📐</div>
+                                    <div>
+                                        <p className="text-gray-900 font-semibold text-sm">Invalid inputs</p>
+                                        <p className="text-gray-500 text-xs mt-1">Please check the input values to generate results.</p>
+                                    </div>
+                                </div>
+                            )
+                        }
                     </div>
                 ) : (
                     <div className="text-center py-10 text-gray-500">No design data available.</div>

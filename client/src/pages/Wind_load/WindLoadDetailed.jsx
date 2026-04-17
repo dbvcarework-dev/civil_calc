@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import WindLoadResult from '../../components/windLoadResult'
+import WindLoadInput from '../../components/windLoadInput'
+import { calculateWindLoad } from '../../utils/windLoadCalc'
 import ExcelJS from 'exceljs'
 
 const ReportSection = ({ title, children }) => (
@@ -81,6 +83,12 @@ const WindLoadDetailed = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    // ── Edit-mode state ──────────────────────────────────────
+    const [isEditing, setIsEditing] = useState(false);
+    const [editInputs, setEditInputs] = useState(null);
+    const [isSaving, setIsSaving] = useState(false);
+    const [saveStatus, setSaveStatus] = useState(null); // 'ok' | 'error' | null
+
     useEffect(() => {
         fetchDesign();
     }, [id]);
@@ -90,7 +98,6 @@ const WindLoadDetailed = () => {
             setIsLoading(true);
             const response = await axios.get(`/api/saved-windloads/${id}`, { withCredentials: true });
             setDesign(response.data.data);
-            console.log(response.data.data);
             setError(null);
         } catch (error) {
             console.error('Error fetching design:', error);
@@ -100,18 +107,73 @@ const WindLoadDetailed = () => {
         }
     }
 
+    const handleStartEdit = () => {
+        setEditInputs({ ...design.inputs });
+        setIsEditing(true);
+        setSaveStatus(null);
+    };
+
+    const handleCancelEdit = () => {
+        setIsEditing(false);
+        setEditInputs(null);
+        setSaveStatus(null);
+    };
+
+    // WindLoadInput uses onChange(key, value) — adapter to keep editInputs in sync
+    const handleEditChange = (key, value) => {
+        setEditInputs(prev => ({ ...prev, [key]: value }));
+    };
+
+    const handleSaveEdit = async () => {
+        const newResults = calculateWindLoad(editInputs);
+        if (!newResults) {
+            setSaveStatus('error');
+            setTimeout(() => setSaveStatus(null), 3000);
+            return;
+        }
+
+        setIsSaving(true);
+        setSaveStatus(null);
+
+        try {
+            const response = await axios.put(
+                `/api/windload/${id}`,
+                { inputs: editInputs, results: newResults },
+                { withCredentials: true }
+            );
+            setDesign(response.data.data);
+            setIsEditing(false);
+            setEditInputs(null);
+            setSaveStatus('ok');
+            setTimeout(() => setSaveStatus(null), 3000);
+        } catch (err) {
+            console.error('Update failed:', err.message);
+            setSaveStatus('error');
+            setTimeout(() => setSaveStatus(null), 3000);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    // Live-recalculated results when in edit mode
+    const liveResults = useMemo(() => {
+        if (!isEditing || !editInputs) return null;
+        return calculateWindLoad(editInputs);
+    }, [isEditing, editInputs]);
+
+    const displayInputs = isEditing ? editInputs : design?.inputs;
+    const displayResults = isEditing ? liveResults : design?.results;
+
     async function getBase64(url) {
         const response = await fetch(url);
         const blob = await response.blob();
 
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
-
             reader.onload = () => {
                 const base64 = reader.result.split(',')[1];
                 resolve(base64);
             };
-
             reader.onerror = reject;
             reader.readAsDataURL(blob);
         });
@@ -149,15 +211,14 @@ const WindLoadDetailed = () => {
                 M53: design.results.cpiVal,
                 R53: design.results.cpiVal,
 
-                //Results 
+                //Results
                 B6: design.results.vz,
                 B10: design.results.pz,
                 B14: design.results.pd,
                 B24: design.results.hwRatio,
                 B25: design.results.lwRatio,
 
-                //walls
-                //presssure 
+                //walls — pressure
                 A36: design.inputs.cpeA,
                 D38: design.inputs.cpeB,
                 C33: design.inputs.cpeC,
@@ -233,7 +294,6 @@ const WindLoadDetailed = () => {
                 }
             }
 
-
             const buffer = await workbook.xlsx.writeBuffer();
             const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
             const url = window.URL.createObjectURL(blob);
@@ -260,17 +320,90 @@ const WindLoadDetailed = () => {
                         <p className="text-xs text-gray-500">Design ID : {id}</p>
                     </div>
 
-                    <div className="ml-auto flex items-center gap-3">
-                        <button onClick={() => exportToExcel(design)}
-                            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-white hover:bg-gray-50 text-gray-700 transition-all duration-200 border border-gray-200 shadow-sm">
-                            Export to Excel
-                        </button>
+                    <div className="ml-auto flex items-center gap-2 sm:gap-3">
+                        {/* Save-status toast */}
+                        {saveStatus === 'ok' && (
+                            <span className="text-xs font-medium text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg">
+                                ✓ Saved!
+                            </span>
+                        )}
+                        {saveStatus === 'error' && (
+                            <span className="text-xs font-medium text-red-600 bg-red-50 border border-red-200 px-3 py-1.5 rounded-lg">
+                                ✗ Save failed
+                            </span>
+                        )}
+
+                        {!isEditing ? (
+                            <>
+                                {/* Edit button */}
+                                <button
+                                    id="edit-windload-btn"
+                                    onClick={handleStartEdit}
+                                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-indigo-600 hover:bg-indigo-500 text-white transition-all duration-200 shadow-sm"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                    <span className="hidden sm:inline">Edit</span>
+                                </button>
+
+                                {/* Export button */}
+                                <button onClick={() => exportToExcel(design)}
+                                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-white hover:bg-gray-50 text-gray-700 transition-all duration-200 border border-gray-200 shadow-sm">
+                                    Export to Excel
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                {/* Cancel button */}
+                                <button
+                                    id="cancel-windload-edit-btn"
+                                    onClick={handleCancelEdit}
+                                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-white hover:bg-gray-50 text-gray-700 transition-all duration-200 border border-gray-200 shadow-sm"
+                                >
+                                    Cancel
+                                </button>
+
+                                {/* Save Changes button */}
+                                <button
+                                    id="save-windload-changes-btn"
+                                    onClick={handleSaveEdit}
+                                    disabled={isSaving || !liveResults}
+                                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 text-white shadow-sm disabled:opacity-40 disabled:cursor-not-allowed
+                                        ${isSaving ? 'bg-indigo-500' : 'bg-emerald-600 hover:bg-emerald-500'}`}
+                                >
+                                    {isSaving ? (
+                                        <>
+                                            <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin flex-shrink-0"></span>
+                                            <span className="hidden sm:inline">Saving…</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V8l-4-4H8z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M16 4v4H8V4" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 12a2 2 0 100 4 2 2 0 000-4z" />
+                                            </svg>
+                                            <span className="hidden sm:inline">Save Changes</span>
+                                        </>
+                                    )}
+                                </button>
+                            </>
+                        )}
+
                         <button onClick={() => navigate(-1)}
                             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-white hover:bg-gray-50 text-gray-700 transition-all duration-200 border border-gray-200 shadow-sm">
                             ← Back
                         </button>
                     </div>
                 </div>
+
+                {/* Edit-mode banner */}
+                {isEditing && (
+                    <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 text-center text-xs text-amber-700 font-medium">
+                        ✏️ Editing mode — modify the inputs on the left. The results panel updates live. Click <strong>Save Changes</strong> to persist.
+                    </div>
+                )}
             </header>
 
             {/* Main content */}
@@ -285,14 +418,26 @@ const WindLoadDetailed = () => {
                     </div>
                 ) : design ? (
                     <div className="flex flex-col lg:flex-row gap-8 items-start">
-                        {/* Left Side: Inputs in Report Format */}
+                        {/* Left Side: Inputs */}
                         <div className="w-full lg:w-1/2">
-                            <ReportInputs inputs={{ ...design.inputs, projectName: design.project_name }} />
+                            {isEditing
+                                ? <WindLoadInput inputs={editInputs} onChange={handleEditChange} results={liveResults} />
+                                : <ReportInputs inputs={{ ...design.inputs, projectName: design.project_name }} />
+                            }
                         </div>
 
                         {/* Right Side: Results Panel */}
                         <div className="w-full lg:w-1/2 lg:sticky lg:top-24">
-                            <WindLoadResult results={design.results} />
+                            {displayResults
+                                ? <WindLoadResult results={displayResults} inputs={displayInputs} />
+                                : (
+                                    <div className="bg-white border-2 border-dashed border-gray-200 rounded-2xl p-12 flex flex-col items-center justify-center text-center shadow-sm">
+                                        <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center text-3xl mb-4 border border-gray-100">💨</div>
+                                        <p className="text-gray-900 font-semibold text-sm">Invalid inputs</p>
+                                        <p className="text-gray-500 text-xs mt-1">Please check the input values to generate results.</p>
+                                    </div>
+                                )
+                            }
                         </div>
                     </div>
                 ) : (
