@@ -22,17 +22,17 @@ cd client
 npm install
 
 ## Run
-Backend:
-cd server
-npm run dev
 Frontend:
-cd client
-node index.js
+--cd client
+--npm run dev
+Backend:
+--cd server
+--node index.js
 
 ## Database Setup
 1. Install PostgreSQL
 2. Create database:
-CREATE DATABASE first_db;
+CREATE DATABASE db_name;
 3. Restore backup:
-psql -U postgres -d first_db -f first_db_backup.sql
+psql -U postgres -p 5433 -d db_name -f first_db_backup.sql
 
