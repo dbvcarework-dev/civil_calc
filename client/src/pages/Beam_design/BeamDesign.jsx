@@ -16,12 +16,12 @@ const DEFAULT_INPUTS = {
 
 export default function BeamDesign() {
     const [inputs, setInputs] = useState(() => {
-        try {
-            const saved = localStorage.getItem('beamCalcDraft');
-            if (saved) return JSON.parse(saved);
-        } catch (e) {
-            console.error('Failed to load draft:', e);
-        }
+        // try {
+        //     const saved = localStorage.getItem('beamCalcDraft');
+        //     if (saved) return JSON.parse(saved);
+        // } catch (e) {
+        //     console.error('Failed to load draft:', e);
+        // }
         return DEFAULT_INPUTS;
     });
 
@@ -29,9 +29,9 @@ export default function BeamDesign() {
     const [saveStatus, setSaveStatus] = useState(null)  // 'ok' | 'error' | null
     const results = calculateBeam(inputs)
 
-    useEffect(() => {
-        localStorage.setItem('beamCalcDraft', JSON.stringify(inputs));
-    }, [inputs]);
+    // useEffect(() => {
+    //     localStorage.setItem('beamCalcDraft', JSON.stringify(inputs));
+    // }, [inputs]);
 
     function handleSave() {
         if (!results) return
@@ -41,7 +41,7 @@ export default function BeamDesign() {
         axios.post('/api/saveddesigns', { inputs, results })
             .then(() => {
                 setSaveStatus('ok')
-                localStorage.removeItem('beamCalcDraft')
+                // localStorage.removeItem('beamCalcDraft')
             })
             .catch((err) => {
                 console.error('Save failed:', err.message)
