@@ -93,9 +93,13 @@ const InputForm = ({ inputs, onChange }) => {
             <div className="grid grid-cols-2 gap-3">
                 <Field label="Bar 1 — Count" id="bar1Count" value={inputs.bar1Count} onChange={set('bar1Count')} />
                 <Field label="Bar 1 — Dia (mm)" id="bar1Dia" value={inputs.bar1Dia} onChange={set('bar1Dia')} />
+            </div>
+            <p className="group-title">Extra Reinforcement</p>
+            <div className="grid grid-cols-2 gap-3">
                 <Field label="Bar 2 — Count" id="bar2Count" value={inputs.bar2Count} onChange={set('bar2Count')} />
                 <Field label="Bar 2 — Dia (mm)" id="bar2Dia" value={inputs.bar2Dia} onChange={set('bar2Dia')} />
             </div>
+
 
             <p className="group-title">Side Face Reinforcement</p>
             <div className="grid grid-cols-2 gap-3">
@@ -108,10 +112,11 @@ const InputForm = ({ inputs, onChange }) => {
                 <div>
                     <label className="label-text">tc Row 1 (%)</label>
                     <select
-                        value={inputs.tcRatio1 ?? '0.75'}
+                        value={inputs.tcRatio1 ?? ''}
                         onChange={setText('tcRatio1')}
                         className="input-field"
                     >
+                        <option value="" disabled>Select value…</option>
                         {[0.15, 0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 2.25, 2.50, 2.75, 3.00].map(v => (
                             <option key={v} value={v}>{v.toFixed(2)} %</option>
                         ))}
@@ -120,10 +125,11 @@ const InputForm = ({ inputs, onChange }) => {
                 <div>
                     <label className="label-text">tc Row 2 (%)</label>
                     <select
-                        value={inputs.tcRatio2 ?? '1.00'}
+                        value={inputs.tcRatio2 ?? ''}
                         onChange={setText('tcRatio2')}
                         className="input-field"
                     >
+                        <option value="" disabled>Select value…</option>
                         {[0.15, 0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 2.25, 2.50, 2.75, 3.00].map(v => (
                             <option key={v} value={v}>{v.toFixed(2)} %</option>
                         ))}

@@ -98,6 +98,7 @@ const WindLoadDetailed = () => {
             setIsLoading(true);
             const response = await axios.get(`/api/saved-windloads/${id}`, { withCredentials: true });
             setDesign(response.data.data);
+            // console.log(response.data.data);
             setError(null);
         } catch (error) {
             console.error('Error fetching design:', error);

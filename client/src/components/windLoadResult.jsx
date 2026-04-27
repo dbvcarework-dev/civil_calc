@@ -101,10 +101,11 @@ const WindLoadResult = ({ results }) => {
                                     <th className="text-left px-4 py-3 text-xs font-bold uppercase tracking-wider text-gray-500">Wall</th>
                                     <th className="text-center px-4 py-3 text-xs font-bold uppercase tracking-wider text-gray-500">Cpe</th>
                                     <th className="text-center px-4 py-3 text-xs font-bold uppercase tracking-wider text-blue-500">
-                                        Pressure<br /><span className="font-normal normal-case tracking-normal text-gray-400">Cpe - Cpi</span>
-                                    </th>
-                                    <th className="text-center px-4 py-3 text-xs font-bold uppercase tracking-wider text-red-500">
                                         Suction<br /><span className="font-normal normal-case tracking-normal text-gray-400">Cpe − Cpi</span>
+                                    </th>
+
+                                    <th className="text-center px-4 py-3 text-xs font-bold uppercase tracking-wider text-blue-500">
+                                        Pressure<br /><span className="font-normal normal-case tracking-normal text-gray-400">Cpe - Cpi</span>
                                     </th>
 
                                 </tr>

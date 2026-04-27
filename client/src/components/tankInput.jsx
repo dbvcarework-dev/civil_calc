@@ -63,7 +63,8 @@ const TankInput = ({ setInputs, inputs }) => {
         "Plate & Layer",
         "Foundation Geometry",
         "Material & Soil",
-        "Advanced Params"
+        "Advanced Params",
+        "Reinforcement Details"
     ];
 
     return (
@@ -186,6 +187,16 @@ const TankInput = ({ setInputs, inputs }) => {
                             </>
                         )}
 
+                        {/* 7. reinforcement details input */}
+                        {activeTab === 6 && (
+                            <>
+                                <Field label="Horizontal Bar (mm)" id="barDia_horiz" value={inputs.barDia_horiz} onChange={set('barDia_horiz')} />
+                                <Field label="Vertical Bar (mm)" id="barDia_vert" value={inputs.barDia_vert} onChange={set('barDia_vert')} />
+                                <Field label="Raft Bar (mm)" id="raftBarDia" value={inputs.raftBarDia} onChange={set('raftBarDia')} />
+
+                            </>
+                        )}
+
                     </div>
 
                     {/* Navigation Buttons */}
@@ -198,12 +209,12 @@ const TankInput = ({ setInputs, inputs }) => {
                             Previous
                         </button>
                         <span className="text-xs text-gray-400 font-bold tracking-widest uppercase">
-                            Step {activeTab + 1} of 6
+                            Step {activeTab + 1} of 7
                         </span>
                         <button
-                            onClick={() => setActiveTab(prev => Math.min(5, prev + 1))}
-                            disabled={activeTab === 5}
-                            className={`px-5 py-2.5 rounded-xl font-medium text-sm transition-all shadow-sm border ${activeTab === 5 ? 'text-gray-300 border-gray-100 bg-gray-50/50 cursor-not-allowed' : 'bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-700 hover:shadow-indigo-500/20 shadow-lg'}`}
+                            onClick={() => setActiveTab(prev => Math.min(6, prev + 1))}
+                            disabled={activeTab === 6}
+                            className={`px-5 py-2.5 rounded-xl font-medium text-sm transition-all shadow-sm border ${activeTab === 6 ? 'text-gray-300 border-gray-100 bg-gray-50/50 cursor-not-allowed' : 'bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-700 hover:shadow-indigo-500/20 shadow-lg'}`}
                         >
                             Next Step
                         </button>

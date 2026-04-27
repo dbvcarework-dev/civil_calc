@@ -164,6 +164,11 @@ const ReportInputs = ({ inputs }) => {
                     <ReportRow label="Seismic Load Force" value={inputs?.seismicFx ? `${inputs.seismicFx} kN` : '—'} />
                     <ReportRow label="Seismic Load Moment" value={inputs?.seismicM ? `${inputs.seismicM} kN-m` : '—'} />
                 </ReportSection>
+                <ReportSection title="Reinforcement Details">
+                    <ReportRow label="Horizontal Bar (mm)" value={inputs?.barDia_horiz} />
+                    <ReportRow label="Vertical Bar (mm)" value={inputs?.barDia_vert} />
+                    <ReportRow label="Raft Bar (mm)" value={inputs?.raftBarDia} />
+                </ReportSection>
             </div>
         </div>
     );
@@ -191,6 +196,7 @@ const TankFoundationDetailed = () => {
             setIsLoading(true);
             const response = await axios.get(`/api/tankdesigns/${id}`, { withCredentials: true });
             setTankDesign(response.data.data || null);
+            console.log(response.data.data);
             setError(null);
         } catch (error) {
             console.error('Error fetching tank design:', error);

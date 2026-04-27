@@ -91,6 +91,7 @@ const BeamDetailedView = () => {
         try {
             const response = await axios.get(`/api/saved-designs/${id}`, { withCredentials: true });
             setDesign(response.data.data);
+            // console.log(response.data.data);
         } catch (err) {
             console.error('Fetch error:', err);
             setError('Failed to load saved design.');

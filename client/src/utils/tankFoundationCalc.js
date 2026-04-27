@@ -46,6 +46,9 @@ export function calculateTankFoundation(inputs) {
         windM,            // Wind moment at top of ring (kN.M) e.g. 2656
         seismicFx,        // Seismic force at top (KN)        e.g. 1477
         seismicM,         // Seismic moment at top (kN.M)     e.g. 9430
+        barDia_horiz,     // Horizontal bar diameter (mm)
+        barDia_vert,      // Vertical bar diameter (mm)
+        raftBarDia        // Raft bar diameter (mm)
     } = parsed;
 
     // Guard: if critical inputs are zero/missing, return null (empty state)
@@ -330,7 +333,7 @@ export function calculateTankFoundation(inputs) {
     r.astHoopEachFace = r.astHoopDesign / 2;
 
     // Spacing for 12mm bar:
-    const barDia_horiz = 12; // mm
+    // const barDia_horiz = 12; // mm
     r.barDia_horiz = barDia_horiz;
     const barArea_horiz = Math.PI * barDia_horiz ** 2 / 4; // = 113.1 MM²
     r.barArea_horiz = barArea_horiz;
@@ -352,7 +355,7 @@ export function calculateTankFoundation(inputs) {
     // ─────────────────────────────────────────────────────────────
     r.astVertTotal = 0.0012 * 1000 * (thkRingBeamWall * 1000);
     r.astVertEachFace = r.astVertTotal / 2;
-    const barDia_vert = 12;
+    // const barDia_vert = 12;
     r.barDia_vert = barDia_vert;
     const barArea_vert = Math.PI * barDia_vert ** 2 / 4;
     r.barArea_vert = barArea_vert;
@@ -378,7 +381,7 @@ export function calculateTankFoundation(inputs) {
 
     const raftD = depthFdnRaft * 1000;
     const raftCover = 50;
-    const raftBarDia = 12;
+    // const raftBarDia = 12;
     r.raftBarDia = raftBarDia;
     r.raftDeProvided = raftD - raftCover - 5; // Excel method
 
@@ -405,9 +408,9 @@ export function calculateTankFoundation(inputs) {
         widthRingRaft_m: widthRingBeamRaft,
         thkRingRaft_m: depthFdnRaft,
         depthFdn_m: r.depthFdnFromGL,
-        horizReinf: `12 TOR @ ${r.spacingHoopProvide} C/C (both faces)`,
-        vertReinf: `12 TOR @ ${r.spacingVertProvide} C/C (both faces)`,
-        raftReinf: `12 TOR @ ${r.raftSpacingProvide} C/C (both ways)`,
+        horizReinf: `${r.barDia_horiz} TOR @ ${r.spacingHoopProvide} C/C (both faces)`,
+        vertReinf: `${r.barDia_vert} TOR @ ${r.spacingVertProvide} C/C (both faces)`,
+        raftReinf: `${r.raftBarDia} TOR @ ${r.raftSpacingProvide} C/C (both ways)`,
         allChecksPass: r.check1_ring_OK && r.check2_ring_OK && r.check3_inside_OK
             && r.sliding_OK && r.overturning_OK && r.wallThk_OK && r.raft_OK
     };
@@ -419,15 +422,16 @@ export function calculateTankFoundation(inputs) {
 // DEFAULT INPUTS (matching the Excel file exactly)
 // ─────────────────────────────────────────────────────────────
 export const defaultInputs = {
-    tankName: null, tankID: null, bcd: null, totalHeightEqpt: null, liquidLevel: null,
-    waterDensity: null, liquidDensity: null,
-    emptyWtTank: null, operatingWtTank: null, hydrotestWtTank: null,
-    tankBottomPlateThk: null, thkSandBitumen: null, thkM30Conc: null, thkM75Conc: null,
-    heightRBAboveGL: null, depthRBBelowGL: null, depthFdnRaft: null,
-    thkRingBeamWall: null, widthRingBeamRaft: null,
-    sbcAtFdnDepth: null, Ka: null, mu: null,
-    unitWtConcrete: null, unitWtSand: null, unitWtSoil: null,
-    fck: null, fy: null,
-    windFx: null, windM: null, seismicFx: null, seismicM: null
+    tankName: 'Tank 1', tankID: '11.80', bcd: '12.00', totalHeightEqpt: '12.80', liquidLevel: '12.50',
+    waterDensity: '10.00', liquidDensity: '10.00',
+    emptyWtTank: '530.00', operatingWtTank: '12429.00', hydrotestWtTank: '14664.00',
+    tankBottomPlateThk: '8.00', thkSandBitumen: '0.05', thkM30Conc: '0.15', thkM75Conc: '0.075',
+    heightRBAboveGL: '1.0', depthRBBelowGL: '1.40', depthFdnRaft: '0.60',
+    thkRingBeamWall: '0.40', widthRingBeamRaft: '2.00',
+    sbcAtFdnDepth: '190.00', Ka: '0.36', mu: '0.30',
+    unitWtConcrete: '25.00', unitWtSand: '18.00', unitWtSoil: '18.00',
+    fck: '30.00', fy: '500.00',
+    windFx: '416.00', windM: '2656.00', seismicFx: '1477.00', seismicM: '9430.00',
+    barDia_horiz: '12.00', barDia_vert: '12.00', raftBarDia: '12.00'
 };
 

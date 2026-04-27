@@ -99,10 +99,10 @@ const TankResult = ({ result, inputs }) => {
                             passed={result.check1_ring_OK && result.check1_inside_OK}
                             details={[
                                 { label: "Permissible SBC (w/ WL)", value: formatVal(result.sbcAfterWL, 'kN/m²') },
-                                { label: "P max (Ring)", value: result.check1_Pmax_ring.toFixed(0) + ' kN/m²' },
-                                { label: "P min (Ring)", value: result.check1_Pmin_ring.toFixed(0) + ' kN/m²' },
-                                { label: "P max (Inside)", value: result.check1_Pmax_inside.toFixed(0) + ' kN/m²' },
-                                { label: "P min (Inside)", value: result.check1_Pmin_inside.toFixed(0) + ' kN/m²' },
+                                { label: "P max (Ring)", value: formatVal(result.check1_Pmax_ring, 'kN/m²') },
+                                { label: "P min (Ring)", value: formatVal(result.check1_Pmin_ring, 'kN/m²') },
+                                { label: "P max (Inside)", value: formatVal(result.check1_Pmax_inside, 'kN/m²') },
+                                { label: "P min (Inside)", value: formatVal(result.check1_Pmin_inside, 'kN/m²') },
                             ]}
                         />
                         <CheckRow
