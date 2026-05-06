@@ -1,45 +1,84 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import WindLoadInput from '../../components/windLoadInput';
 import WindLoadResult from '../../components/windLoadResult';
 import { calculateWindLoad } from '../../utils/windLoadCalc';
+import WindConfigModal from './WindConfigModal';
+import defaultConfig from '../../config/winLoadTables.json'
 
 const DEFAULT_INPUTS = {
-    projectName: '',
-    H: '22',
-    W: '20',
-    L: '31.11',
-    city: 'Vadodara',
-    designLife: '50',
-    structureType: 'General',
-    terrainCategory: '2',
-    k2Custom: '1.05',
-    k3Type: 'flat',
-    k3Custom: '1.0',
-    k4Type: 'normal',
-    kd: 'rectangular',
-    kcType: '2',
-    cpi: '0.7',   // "More than 20% openings"
-    cpeA: '0.7',
-    cpeB: '-0.3',
-    cpeC: '-0.7',
-    cpeD: '-0.7',
+    projectName: null,
+    H: null,
+    W: null,
+    L: null,
+    city: null,
+    designLife: null,
+    structureType: null,
+    terrainCategory: null,
+    k2Custom: null,
+    k3Type: null,
+    k3Custom: null,
+    k4Type: null,
+    kd: null,
+    kcType: null,
+    cpi: null,   // "More than 20% openings"
+    cpeA: null,
+    cpeB: null,
+    cpeC: null,
+    cpeD: null,
 };
 
 const WindLoadCalc = () => {
-    const [inputs, setInputs] = useState(DEFAULT_INPUTS);
+    const [inputs, setInputs] = useState(() => {
+        try {
+            const saved = sessionStorage.getItem('windLoadCalcDraft');
+            if (saved) return JSON.parse(saved);
+        } catch (e) {
+            console.error('Failed to load draft:', e);
+        }
+        return DEFAULT_INPUTS;
+    });
     const [isSaving, setIsSaving] = useState(false);
     const [saveMessage, setSaveMessage] = useState({ text: '', type: '' });
     const navigate = useNavigate();
+
+    const [showConfig, setShowConfig] = useState(false);
+    const [config, setConfig] = useState(null);
+
 
     const handleChange = (key, value) => {
         setInputs(prev => ({ ...prev, [key]: value }));
     };
 
-    const results = useMemo(() => {
-        return calculateWindLoad(inputs);
+    useEffect(() => {
+        sessionStorage.setItem('windLoadCalcDraft', JSON.stringify(inputs));
     }, [inputs]);
+
+
+    useEffect(() => {
+        async function load() {
+            const res = await axios.get(
+                "http://localhost:3000/api/windconfig",
+                { withCredentials: true }
+            );
+
+            setConfig(res.data);
+        }
+
+        load();
+    }, []);
+
+    const finalConfig = {
+        k1Table: config?.k1Table || defaultConfig.k1Table,
+        k2Table: config?.k2Table || defaultConfig.k2Table,
+        kcMap: config?.kcMap || defaultConfig.kcMap,
+        kdMap: config?.kdMap || defaultConfig.kdMap,
+        cityWindSpeeds: config?.cityWindSpeeds || defaultConfig.cityWindSpeeds,
+    };
+    const results = useMemo(() => {
+        return calculateWindLoad(inputs, finalConfig);
+    }, [inputs, finalConfig]);
 
     const handleSave = async () => {
         setIsSaving(true);
@@ -49,10 +88,12 @@ const WindLoadCalc = () => {
             await axios.post('/api/windload', {
                 project_name: inputs.projectName || 'Untitled Wind Load',
                 inputs,
-                results
+                results,
+                finalConfig
             });
             setSaveMessage({ text: 'Design saved successfully!', type: 'success' });
             setTimeout(() => setSaveMessage({ text: '', type: '' }), 3000);
+            sessionStorage.removeItem('windLoadCalcDraft');
         } catch (error) {
             console.error('Error saving wind load design:', error);
             setSaveMessage({ text: 'Failed to save design.', type: 'error' });
@@ -80,9 +121,35 @@ const WindLoadCalc = () => {
                         <div className="ml-auto">
                             <a href="/app/wind-load-calc/saved"
                                 className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-white hover:bg-gray-50 text-gray-700 transition-all duration-200 border border-gray-200 shadow-sm">
-                                ← Saved Designs
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="w-4 h-4 flex-shrink-0"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                    strokeWidth={2}
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                    />
+                                </svg>
+
+                                <span className="hidden md:inline">Saved Designs</span>
                             </a>
                         </div>
+                        <button
+                            onClick={() => setShowConfig(true)}
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-white hover:bg-gray-50 text-gray-700 transition-all duration-200 border border-gray-200 shadow-sm"
+                            title="Configuration"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <span className="hidden sm:inline">Config</span>
+                        </button>
                         <button
                             onClick={handleSave}
                             disabled={!results || isSaving}
@@ -142,7 +209,10 @@ const WindLoadCalc = () => {
 
                 </div>
             </main>
+            <WindConfigModal windTable={finalConfig} setWindTable={setConfig} isOpen={showConfig} onClose={() => setShowConfig(false)} />
         </div>
+
+
     );
 };
 

@@ -5,6 +5,7 @@ import WindLoadResult from '../../components/windLoadResult'
 import WindLoadInput from '../../components/windLoadInput'
 import { calculateWindLoad } from '../../utils/windLoadCalc'
 import ExcelJS from 'exceljs'
+import WindConfigModal from './WindConfigModal'
 
 const ReportSection = ({ title, children }) => (
     <div className="mb-6 last:mb-0">
@@ -35,41 +36,41 @@ const ReportInputs = ({ inputs }) => {
             <div className="p-5">
                 <ReportSection title="Project Details">
                     <ReportRow label="Project Name" value={inputs?.projectName || 'Untitled Design'} />
-                    <ReportRow label="City" value={inputs?.city} />
+                    <ReportRow label="City" value={inputs?.city ? `${inputs.city}` : '—'} />
                 </ReportSection>
 
                 <ReportSection title="Building Geometry">
-                    <ReportRow label="Height H (m)" value={inputs?.H} />
-                    <ReportRow label="Width W (m)" value={inputs?.W} />
-                    <ReportRow label="Length L (m)" value={inputs?.L} />
+                    <ReportRow label="Height H (m)" value={inputs?.H ? `${inputs.H} m` : '—'} />
+                    <ReportRow label="Width W (m)" value={inputs?.W ? `${inputs.W} m` : '—'} />
+                    <ReportRow label="Length L (m)" value={inputs?.L ? `${inputs.L} m` : '—'} />
                 </ReportSection>
 
                 <ReportSection title="Terrain & Structure">
-                    <ReportRow label="Terrain Category" value={inputs?.terrainCategory} />
-                    <ReportRow label="Structure Class" value={inputs?.structureType} />
+                    <ReportRow label="Terrain Category" value={inputs?.terrainCategory ? `${inputs.terrainCategory}` : '—'} />
+                    <ReportRow label="Structure Class" value={inputs?.structureType ? `${inputs.structureType}` : '—'} />
                     <ReportRow label="Design Life" value={inputs?.designLife ? `${inputs.designLife} Years` : '—'} />
                 </ReportSection>
 
                 <ReportSection title="Risk Factors">
-                    <ReportRow label="K2 (Terrain)" value={inputs?.k2Custom} />
-                    <ReportRow label="K3 (Topography)" value={inputs?.k3Type === 'flat' ? 'Flat (1.0)' : inputs?.k3Custom} />
-                    <ReportRow label="K4 (Importance)" value={inputs?.k4Type} />
+                    <ReportRow label="K2 (Terrain)" value={inputs?.k2Custom ? `${inputs.k2Custom}` : '—'} />
+                    <ReportRow label="K3 (Topography)" value={inputs?.k3Type === 'flat' ? 'Flat (1.0)' : inputs?.k3Custom ? `${inputs.k3Custom}` : '—'} />
+                    <ReportRow label="K4 (Importance)" value={inputs?.k4Type ? `${inputs.k4Type}` : '—'} />
                 </ReportSection>
 
                 <ReportSection title="Directionality & Combination">
-                    <ReportRow label="Kd (Directionality)" value={inputs?.kd} />
-                    <ReportRow label="Kc (Combination)" value={inputs?.kcType} />
+                    <ReportRow label="Kd (Directionality)" value={inputs?.kd ? `${inputs.kd}` : '—'} />
+                    <ReportRow label="Kc (Combination)" value={inputs?.kcType ? `${inputs.kcType}` : '—'} />
                 </ReportSection>
 
                 <ReportSection title="Internal Pressure (Cpi)">
-                    <ReportRow label="Cpi" value={inputs?.cpi} />
+                    <ReportRow label="Cpi" value={inputs?.cpi ? `${inputs.cpi}` : '—'} />
                 </ReportSection>
 
                 <ReportSection title="External Pressure (Cpe)">
-                    <ReportRow label="Wall A" value={inputs?.cpeA} />
-                    <ReportRow label="Wall B" value={inputs?.cpeB} />
-                    <ReportRow label="Wall C" value={inputs?.cpeC} />
-                    <ReportRow label="Wall D" value={inputs?.cpeD} />
+                    <ReportRow label="Wall A" value={inputs?.cpeA ? `${inputs.cpeA}` : '—'} />
+                    <ReportRow label="Wall B" value={inputs?.cpeB ? `${inputs.cpeB}` : '—'} />
+                    <ReportRow label="Wall C" value={inputs?.cpeC ? `${inputs.cpeC}` : '—'} />
+                    <ReportRow label="Wall D" value={inputs?.cpeD ? `${inputs.cpeD}` : '—'} />
                 </ReportSection>
             </div>
         </div>
@@ -82,6 +83,7 @@ const WindLoadDetailed = () => {
     const [design, setDesign] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [showConfig, setShowConfig] = useState(false);
 
     // ── Edit-mode state ──────────────────────────────────────
     const [isEditing, setIsEditing] = useState(false);
@@ -126,7 +128,7 @@ const WindLoadDetailed = () => {
     };
 
     const handleSaveEdit = async () => {
-        const newResults = calculateWindLoad(editInputs);
+        const newResults = calculateWindLoad(editInputs, design?.configuration_used);
         if (!newResults) {
             setSaveStatus('error');
             setTimeout(() => setSaveStatus(null), 3000);
@@ -159,7 +161,7 @@ const WindLoadDetailed = () => {
     // Live-recalculated results when in edit mode
     const liveResults = useMemo(() => {
         if (!isEditing || !editInputs) return null;
-        return calculateWindLoad(editInputs);
+        return calculateWindLoad(editInputs, design?.configuration_used);
     }, [isEditing, editInputs]);
 
     const displayInputs = isEditing ? editInputs : design?.inputs;
@@ -348,6 +350,19 @@ const WindLoadDetailed = () => {
                                     <span className="hidden sm:inline">Edit</span>
                                 </button>
 
+                                {/* Config Button */}
+                                <button
+                                    onClick={() => setShowConfig(true)}
+                                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-white hover:bg-gray-50 text-gray-700 transition-all duration-200 border border-gray-200 shadow-sm"
+                                    title="Configuration"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    <span className="hidden sm:inline">Config</span>
+                                </button>
+
                                 {/* Export button */}
                                 <button onClick={() => exportToExcel(design)}
                                     className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-white hover:bg-gray-50 text-gray-700 transition-all duration-200 border border-gray-200 shadow-sm">
@@ -450,6 +465,8 @@ const WindLoadDetailed = () => {
             <footer className="border-t border-gray-200 mt-auto py-6 text-center text-xs text-gray-500">
                 IS 875 (Part 3) : 2015 · Wind Load Method · Detail Report
             </footer>
+
+            <WindConfigModal windTable={design?.configuration_used} isOpen={showConfig} onClose={() => setShowConfig(false)} isReadOnly={true} />
         </div>
     )
 }

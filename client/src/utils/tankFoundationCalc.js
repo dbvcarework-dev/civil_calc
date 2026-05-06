@@ -337,7 +337,7 @@ export function calculateTankFoundation(inputs) {
     r.barDia_horiz = barDia_horiz;
     const barArea_horiz = Math.PI * barDia_horiz ** 2 / 4; // = 113.1 MM²
     r.barArea_horiz = barArea_horiz;
-    r.spacingHoopCalc = barArea_horiz * 1000 / r.astHoopEachFace; // C/C spacing (mm)
+    r.spacingHoopCalc = barArea_horiz * 1000 / r.astHoopDesign; // C/C spacing (mm)
     r.spacingHoopProvide = 125; // mm (as per Excel conclusion)
     r.astHoopProvided = barArea_horiz * 1000 / r.spacingHoopProvide;
     // = 113.1 × 8 = 904.32 MM² ✓
@@ -422,16 +422,17 @@ export function calculateTankFoundation(inputs) {
 // DEFAULT INPUTS (matching the Excel file exactly)
 // ─────────────────────────────────────────────────────────────
 export const defaultInputs = {
-    tankName: 'Tank 1', tankID: '11.80', bcd: '12.00', totalHeightEqpt: '12.80', liquidLevel: '12.50',
-    waterDensity: '10.00', liquidDensity: '10.00',
-    emptyWtTank: '530.00', operatingWtTank: '12429.00', hydrotestWtTank: '14664.00',
-    tankBottomPlateThk: '8.00', thkSandBitumen: '0.05', thkM30Conc: '0.15', thkM75Conc: '0.075',
-    heightRBAboveGL: '1.0', depthRBBelowGL: '1.40', depthFdnRaft: '0.60',
-    thkRingBeamWall: '0.40', widthRingBeamRaft: '2.00',
-    sbcAtFdnDepth: '190.00', Ka: '0.36', mu: '0.30',
-    unitWtConcrete: '25.00', unitWtSand: '18.00', unitWtSoil: '18.00',
-    fck: '30.00', fy: '500.00',
-    windFx: '416.00', windM: '2656.00', seismicFx: '1477.00', seismicM: '9430.00',
-    barDia_horiz: '12.00', barDia_vert: '12.00', raftBarDia: '12.00'
+    tankName: null, tankID: null, bcd: null, totalHeightEqpt: null, liquidLevel: null,
+    waterDensity: null, liquidDensity: null,
+    emptyWtTank: null, operatingWtTank: null, hydrotestWtTank: null,
+    tankBottomPlateThk: null, thkSandBitumen: null, thkM30Conc: null, thkM75Conc: null,
+    heightRBAboveGL: null, depthRBBelowGL: null, depthFdnRaft: null,
+    thkRingBeamWall: null, widthRingBeamRaft: null,
+    sbcAtFdnDepth: null, Ka: null, mu: null,
+    unitWtConcrete: null, unitWtSand: null, unitWtSoil: null,
+    fck: null, fy: null,
+    windFx: null, windM: null, seismicFx: null, seismicM: null,
+    barDia_horiz: null, barDia_vert: null, raftBarDia: null
+
 };
 

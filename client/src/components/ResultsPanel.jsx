@@ -80,7 +80,7 @@ const ResultsPanel = ({ results: r }) => {
                         <span className="font-medium">{r.tcHi != null ? r.tcHi.toFixed(2) : "—"}</span>
                     </div>
                 </div>
-                <Row label="Calculated τc" value={<span className="text-blue-600 font-bold">{r.tc != Infinity && r.tc != null ? r.tc.toFixed(2) : '—'} N/mm²</span>} />
+                <Row label="Calculated τc" value={<span className="text-blue-600 font-bold">{r.tc != null ? r.tc.toFixed(2) : '—'} N/mm²</span>} />
             </div>
             <Row label="τc,max" value={`${r.tcMax != null ? r.tcMax.toFixed(1) : "—"} N/mm²`} />
             <Row

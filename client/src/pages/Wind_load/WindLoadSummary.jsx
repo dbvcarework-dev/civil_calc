@@ -7,17 +7,21 @@ const SavedWindLoad = () => {
     const [windLoads, setWindLoads] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const pageSize = 6;
+    const totalPages = Math.ceil(windLoads.length / pageSize);
+    const currentWindLoads = windLoads.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
     const COLUMNS = [
         { label: 'Project Name', key: 'project_name' },
         { label: 'City', render: (item) => item.inputs?.city || '-' },
-        { 
-            label: 'Dimensions (H×W×L)', 
-            render: (item) => `${item.inputs?.H || 0} × ${item.inputs?.W || 0} × ${item.inputs?.L || 0}` 
+        {
+            label: 'Dimensions (H×W×L)',
+            render: (item) => `${item.inputs?.H || 0} × ${item.inputs?.W || 0} × ${item.inputs?.L || 0}`
         },
-        { 
-            label: 'Design Pressure (Pd)', 
-            render: (item) => item.results?.pd != null ? `${Number(item.results.pd).toFixed(3)} kN/m²` : '-' 
+        {
+            label: 'Design Pressure (Pd)',
+            render: (item) => item.results?.pd != null ? `${Number(item.results.pd).toFixed(3)} kN/m²` : '-'
         },
         {
             label: 'Date Saved',
@@ -121,7 +125,7 @@ const SavedWindLoad = () => {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-50">
-                                    {windLoads.map((item) => (
+                                    {currentWindLoads.map((item) => (
                                         <tr onClick={() => navigate(`/app/wind-load-calc/${item.id}`)} key={item.id} className="hover:bg-gray-100/50 transition-colors group">
                                             {COLUMNS.map((col, idx) => (
                                                 <td key={idx} className="px-4 py-4 text-sm whitespace-nowrap">
@@ -147,6 +151,29 @@ const SavedWindLoad = () => {
                                     ))}
                                 </tbody>
                             </table>
+                            {totalPages > 1 && (
+                                <div className="flex justify-between items-center px-4 py-4 bg-white border-t border-gray-100">
+                                    <div className="text-sm text-gray-500">
+                                        Showing <span className="font-medium text-gray-900">{(currentPage - 1) * pageSize + 1}</span> to <span className="font-medium text-gray-900">{Math.min(currentPage * pageSize, windLoads.length)}</span> of <span className="font-medium text-gray-900">{windLoads.length}</span> results
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                            disabled={currentPage === 1}
+                                            className="px-3 py-1 text-sm border rounded-lg text-gray-600 disabled:opacity-50 hover:bg-gray-50 transition-colors"
+                                        >
+                                            Previous
+                                        </button>
+                                        <button
+                                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                            disabled={currentPage === totalPages}
+                                            className="px-3 py-1 text-sm border rounded-lg text-gray-600 disabled:opacity-50 hover:bg-gray-50 transition-colors"
+                                        >
+                                            Next
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

@@ -7,6 +7,10 @@ const SavedTankDesigns = () => {
     const [tankDesigns, setTankDesigns] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const pageSize = 6;
+    const totalPages = Math.ceil(tankDesigns.length / pageSize);
+    const currentTankDesigns = tankDesigns.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
     const COLUMNS = [
         { label: 'Tank Name', key: 'tank_name' },
@@ -136,7 +140,7 @@ const SavedTankDesigns = () => {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-50">
-                                    {tankDesigns.map((item) => (
+                                    {currentTankDesigns.map((item) => (
                                         <tr onClick={() => navigate(`/app/tank-foundation/${item.id}`)} key={item.id} className="hover:bg-gray-100/50 transition-colors group">
                                             {COLUMNS.map((col, idx) => (
                                                 <td key={idx} className="px-4 py-4 text-sm whitespace-nowrap">
@@ -162,6 +166,29 @@ const SavedTankDesigns = () => {
                                     ))}
                                 </tbody>
                             </table>
+                            {totalPages > 1 && (
+                                <div className="flex justify-between items-center px-4 py-4 bg-white border-t border-gray-100">
+                                    <div className="text-sm text-gray-500">
+                                        Showing <span className="font-medium text-gray-900">{(currentPage - 1) * pageSize + 1}</span> to <span className="font-medium text-gray-900">{Math.min(currentPage * pageSize, tankDesigns.length)}</span> of <span className="font-medium text-gray-900">{tankDesigns.length}</span> results
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                            disabled={currentPage === 1}
+                                            className="px-3 py-1 text-sm border rounded-lg text-gray-600 disabled:opacity-50 hover:bg-gray-50 transition-colors"
+                                        >
+                                            Previous
+                                        </button>
+                                        <button
+                                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                            disabled={currentPage === totalPages}
+                                            className="px-3 py-1 text-sm border rounded-lg text-gray-600 disabled:opacity-50 hover:bg-gray-50 transition-colors"
+                                        >
+                                            Next
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

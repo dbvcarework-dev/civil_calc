@@ -9,11 +9,12 @@ const tankDesignRoutes = require('./src/routes/tankDesigns');
 const windloadDesignRoutes = require('./src/routes/windloadDesigns');
 const userRoutes = require('./src/routes/users');
 const loginRoutes = require('./src/routes/login');
+const beamConfigRoutes = require('./src/routes/beamConfig');
 const pool = require('./src/db');
 const cookieParser = require('cookie-parser');
 const auth = require('./src/middleware/auth');
 require('dotenv').config();
-
+const windConfigRoutes = require('./src/routes/windConfig');
 
 
 pool.connect().then(() => {
@@ -40,6 +41,10 @@ app.use('/api/tankdesigns', auth, tankDesignRoutes);
 app.use('/api/windload', auth, windloadDesignRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/login', loginRoutes);
+app.use('/api/beamconfig', auth, beamConfigRoutes);
+app.use('/api/windconfig', auth, windConfigRoutes);
+
+
 
 app.get('/api/saved-designs', auth, async (req, res) => {
     const emp_id = req.user.emp_id;

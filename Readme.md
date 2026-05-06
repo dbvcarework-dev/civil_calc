@@ -36,6 +36,7 @@ CREATE DATABASE db_name;
 3. Restore backup:
 psql -U postgres -p 5433 -d db_name -f first_db_backup.sql
 
+
 ## Default Inputs For Beam Design
 beamName: 'B1', bendingMomentDirection: '',
     Mu: '1500', Vu: '940', cover: '77.5', fck: '30', fy: '500',
@@ -55,7 +56,8 @@ tankName: 'Tank 1', tankID: '11.80', bcd: '12.00', totalHeightEqpt: '12.80', liq
     sbcAtFdnDepth: '190.00', Ka: '0.36', mu: '0.30',
     unitWtConcrete: '25.00', unitWtSand: '18.00', unitWtSoil: '18.00',
     fck: '30.00', fy: '500.00',
-    windFx: '416.00', windM: '2656.00', seismicFx: '1477.00', seismicM: '9430.00'
+    windFx: '416.00', windM: '2656.00', seismicFx: '1477.00', seismicM: '9430.00',
+    barDia_horiz: '12', barDia_vert: '12', raftBarDia: '12'
 
 ## Default Inputs For Wind Load Calculation
  projectName: '',
@@ -66,9 +68,9 @@ tankName: 'Tank 1', tankID: '11.80', bcd: '12.00', totalHeightEqpt: '12.80', liq
     designLife: '50',
     structureType: 'General',
     terrainCategory: '2',
-    k2Custom: '1.05',
+    k2Custom: null,
     k3Type: 'flat',
-    k3Custom: '1.0',
+    k3Custom: null,
     k4Type: 'normal',
     kd: 'rectangular',
     kcType: '2',

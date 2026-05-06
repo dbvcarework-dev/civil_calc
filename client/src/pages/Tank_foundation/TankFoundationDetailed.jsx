@@ -84,13 +84,13 @@ const TankVisualization = ({ inputs }) => {
 
                 <div className="w-full lg:w-1/2 flex flex-col justify-center">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <DataBox label="BCD" value={inputs.bcd} unit="m" />
-                        <DataBox label="Total Height" value={inputs.totalHeightEqpt} unit="m" />
-                        <DataBox label="RB Above GL" value={inputs.heightRBAboveGL} unit="m" />
-                        <DataBox label="RB Below GL" value={inputs.depthRBBelowGL} unit="m" />
-                        <DataBox label="FDN Raft Depth" value={inputs.depthFdnRaft} unit="m" />
-                        <DataBox label="RB Wall Thk" value={inputs.thkRingBeamWall} unit="m" />
-                        <DataBox label="RB Raft Width" value={inputs.widthRingBeamRaft} unit="m" />
+                        <DataBox label="BCD" value={inputs.bcd ? `${inputs.bcd}` : '—'} unit="m" />
+                        <DataBox label="Total Height" value={inputs.totalHeightEqpt ? `${inputs.totalHeightEqpt}` : '—'} unit="m" />
+                        <DataBox label="RB Above GL" value={inputs.heightRBAboveGL ? `${inputs.heightRBAboveGL}` : '—'} unit="m" />
+                        <DataBox label="RB Below GL" value={inputs.depthRBBelowGL ? `${inputs.depthRBBelowGL}` : '—'} unit="m" />
+                        <DataBox label="FDN Raft Depth" value={inputs.depthFdnRaft ? `${inputs.depthFdnRaft}` : '—'} unit="m" />
+                        <DataBox label="RB Wall Thk" value={inputs.thkRingBeamWall ? `${inputs.thkRingBeamWall}` : '—'} unit="m" />
+                        <DataBox label="RB Raft Width" value={inputs.widthRingBeamRaft ? `${inputs.widthRingBeamRaft}` : '—'} unit="m" />
                     </div>
                 </div>
             </div>
@@ -117,7 +117,7 @@ const ReportInputs = ({ inputs }) => {
 
             <div className="p-5">
                 <ReportSection title="Tank Details">
-                    <ReportRow label="Design/Tank Name" value={inputs?.tankName} />
+                    <ReportRow label="Design/Tank Name" value={inputs?.tankName ? `${inputs.tankName}` : '—'} />
                     <ReportRow label="Tank Internal Diameter" value={inputs?.tankID ? `${inputs.tankID} m` : '—'} />
                     <ReportRow label="B.C.D" value={inputs?.bcd ? `${inputs.bcd} m` : '—'} />
                     <ReportRow label="Total Height of Equipment" value={inputs?.totalHeightEqpt ? `${inputs.totalHeightEqpt} m` : '—'} />
@@ -196,7 +196,7 @@ const TankFoundationDetailed = () => {
             setIsLoading(true);
             const response = await axios.get(`/api/tankdesigns/${id}`, { withCredentials: true });
             setTankDesign(response.data.data || null);
-            console.log(response.data.data);
+            // console.log(response.data.data);
             setError(null);
         } catch (error) {
             console.error('Error fetching tank design:', error);
@@ -416,7 +416,7 @@ const TankFoundationDetailed = () => {
             worksheet.getCell('I228').value = design?.results?.astMinHorizontal;
             worksheet.getCell('G227').value = design?.results?.astHoopRequired;
             worksheet.getCell('G230').value = design?.results?.astHoopEachFace;
-            worksheet.getCell('G233').value = design?.results?.barArea_horiz;
+            worksheet.getCell('G233').value = design?.results?.spacingHoopCalc;
             worksheet.getCell('G234').value = design?.results?.spacingHoopProvide;
             worksheet.getCell('C233').value = design?.results?.barDia_horiz;
             worksheet.getCell('C234').value = design?.results?.barDia_horiz;
@@ -615,7 +615,7 @@ const TankFoundationDetailed = () => {
                         <button onClick={fetchTankDesign} className="mt-4 text-indigo-600 text-sm font-bold hover:underline">Try Again</button>
                     </div>
                 ) : tankDesign ? (
-                    <div className="flex flex-col lg:flex-row gap-8 items-start animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    <div className="flex flex-col lg:flex-row gap-8 items-start ">
                         {/* Left Side: Inputs */}
                         <div className="w-full lg:w-7/12 xl:w-2/3">
                             {isEditing

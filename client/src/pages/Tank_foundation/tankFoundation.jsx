@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import TankInput from '../../components/tankInput';
@@ -6,11 +6,25 @@ import TankResult from '../../components/tankResult';
 import { calculateTankFoundation, defaultInputs } from '../../utils/tankFoundationCalc';
 
 const TankFoundation = () => {
-    const [inputs, setInputs] = useState(defaultInputs);
-    const result = calculateTankFoundation(inputs);
+    const [inputs, setInputs] = useState(() => {
+        try {
+            const saved = sessionStorage.getItem('tankFoundationCalcDraft');
+            if (saved) return JSON.parse(saved);
+        } catch (e) {
+            console.error('Failed to load draft:', e);
+        }
+        return defaultInputs;
+    })
+    const result = useMemo(() => {
+        return calculateTankFoundation(inputs);
+    }, [inputs]);
     const [isSaving, setIsSaving] = useState(false);
     const [saveMessage, setSaveMessage] = useState({ text: '', type: '' });
     const navigate = useNavigate();
+
+    useEffect(() => {
+        sessionStorage.setItem('tankFoundationCalcDraft', JSON.stringify(inputs));
+    }, [inputs]);
 
     const handleSave = async () => {
         setIsSaving(true);
@@ -24,6 +38,7 @@ const TankFoundation = () => {
             });
             setSaveMessage({ text: 'Design saved successfully!', type: 'success' });
             setTimeout(() => setSaveMessage({ text: '', type: '' }), 3000);
+            sessionStorage.removeItem('tankFoundationCalcDraft');
         } catch (error) {
             console.error('Error saving tank design:', error);
             setSaveMessage({ text: 'Failed to save design.', type: 'error' });
@@ -56,7 +71,22 @@ const TankFoundation = () => {
                         <div className="ml-auto">
                             <a href="/app/tank-foundation/saved"
                                 className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-white hover:bg-gray-50 text-gray-700 transition-all duration-200 border border-gray-200 shadow-sm">
-                                ← Saved Designs
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="w-4 h-4 flex-shrink-0"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                    strokeWidth={2}
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                    />
+                                </svg>
+
+                                <span className="hidden sm:inline">Saved Designs</span>
                             </a>
                         </div>
                         <button

@@ -5,6 +5,9 @@ import axios from 'axios'
 import { useState, useEffect } from 'react'
 import ExcelJS from 'exceljs'
 import { calculateBeam } from '../../utils/beamCalc'
+import BeamConfigModal from '../Beam_design/BeamConfigModal';
+import beamTables from '../../config/beamTables.json'
+
 
 const ReportSection = ({ title, children }) => (
     <div className="mb-6 last:mb-0">
@@ -32,24 +35,24 @@ const ReportInputs = ({ inputs }) => {
 
             <div className="mt-4">
                 <ReportSection title="Beam Identification">
-                    <ReportRow label="Beam Marking" value={inputs?.beamName} />
-                    <ReportRow label="Moment Direction" value={inputs?.bendingMomentDirection} />
+                    <ReportRow label="Beam Marking" value={inputs?.beamName ? `${inputs.beamName}` : '—'} />
+                    <ReportRow label="Moment Direction" value={inputs?.bendingMomentDirection ? `${inputs.bendingMomentDirection}` : '—'} />
                 </ReportSection>
 
                 <ReportSection title="Loading">
-                    <ReportRow label="Moment Mu (kN·m)" value={inputs?.Mu} />
-                    <ReportRow label="Shear Vu (kN)" value={inputs?.Vu} />
+                    <ReportRow label="Moment Mu (kN·m)" value={inputs?.Mu ? `${inputs.Mu}` : '—'} />
+                    <ReportRow label="Shear Vu (kN)" value={inputs?.Vu ? `${inputs.Vu}` : '—'} />
                 </ReportSection>
 
                 <ReportSection title="Section Geometry">
-                    <ReportRow label="Width b (mm)" value={inputs?.b} />
-                    <ReportRow label="Depth D (mm)" value={inputs?.D} />
-                    <ReportRow label="Eff. Cover (mm)" value={inputs.cover} />
+                    <ReportRow label="Width b (mm)" value={inputs?.b ? `${inputs.b}` : '—'} />
+                    <ReportRow label="Depth D (mm)" value={inputs?.D ? `${inputs.D}` : '—'} />
+                    <ReportRow label="Eff. Cover (mm)" value={inputs.cover ? `${inputs.cover}` : '—'} />
                 </ReportSection>
 
                 <ReportSection title="Material Grades">
-                    <ReportRow label="Concrete fck" value={inputs.fck ? `${inputs.fck} MPa` : ''} />
-                    <ReportRow label="Steel fy" value={inputs.fy ? `${inputs.fy} MPa` : ''} />
+                    <ReportRow label="Concrete fck" value={inputs.fck ? `${inputs.fck} MPa` : '—'} />
+                    <ReportRow label="Steel fy" value={inputs.fy ? `${inputs.fy} MPa` : '—'} />
                 </ReportSection>
 
                 <ReportSection title="Main Reinforcement">
@@ -83,6 +86,8 @@ const BeamDetailedView = () => {
     const [isSaving, setIsSaving] = useState(false);
     const [saveStatus, setSaveStatus] = useState(null); // 'ok' | 'error' | null
 
+    const [showConfig, setShowConfig] = useState(false);
+
     useEffect(() => {
         fetchDesign();
     }, [id]);
@@ -114,9 +119,15 @@ const BeamDetailedView = () => {
         setSaveStatus(null);
     };
 
+
+
+    // Live-recalculated results when in edit mode
+    const liveResults = isEditing ? calculateBeam(editInputs, design?.configuration_used) : null;
+
+
     // Save — recalculate client-side and PUT the full inputs + results
     const handleSaveEdit = async () => {
-        const newResults = calculateBeam(editInputs);
+        const newResults = calculateBeam(editInputs, design?.configuration_used);
         if (!newResults) {
             setSaveStatus('error');
             setTimeout(() => setSaveStatus(null), 3000);
@@ -129,7 +140,7 @@ const BeamDetailedView = () => {
         try {
             const response = await axios.put(
                 `/api/saveddesigns/${id}`,
-                { inputs: editInputs, results: newResults },
+                { inputs: editInputs, results: newResults, finalConfig: design?.configuration_used },
                 { withCredentials: true }
             );
             // Update local design state with the returned data
@@ -147,8 +158,6 @@ const BeamDetailedView = () => {
         }
     };
 
-    // Live-recalculated results when in edit mode
-    const liveResults = isEditing ? calculateBeam(editInputs) : null;
 
     const exportToExcel = async (design) => {
         const response = await fetch("/beam_temp4.xlsx");
@@ -160,74 +169,74 @@ const BeamDetailedView = () => {
 
         const cellMap = {
             // ── INPUTS
-            C10: design.inputs.Mu,
-            C11: design.inputs.cover,
-            C12: design.inputs.fck,
-            C13: design.inputs.fy,
-            C14: design.inputs.b,
-            C15: design.inputs.D,
-            C16: design.results.d,
-            C17: design.results.mulimFactor,
+            C10: design.inputs.Mu !== null ? design.inputs.Mu : '—',
+            C11: design.inputs.cover !== null ? design.inputs.cover : '—',
+            C12: design.inputs.fck !== null ? design.inputs.fck : '—',
+            C13: design.inputs.fy !== null ? design.inputs.fy : '—',
+            C14: design.inputs.b !== null ? design.inputs.b : '—',
+            C15: design.inputs.D !== null ? design.inputs.D : '—',
+            C16: design.results.d !== null ? design.results.d : '—',
+            C17: design.results.mulimFactor !== null ? design.results.mulimFactor : '—',
 
             // ── FLEXURE ──
-            C19: design.results.Mulim.toFixed(2),
+            C19: design.results.Mulim !== null ? design.results.Mulim.toFixed(2) : '—',
             D20: design.results.muCheck,
-            C23: design.results.PtReq.toFixed(3),
-            C24: design.results.AstReq.toFixed(2),
-            C27: design.results.AstMin,
-            C28: design.results.PtMin,
+            C23: design.results.PtReq !== null ? design.results.PtReq.toFixed(3) : '—',
+            C24: design.results.AstReq !== null ? design.results.AstReq.toFixed(2) : '—',
+            C27: design.results.AstMin !== null ? design.results.AstMin.toFixed(2) : '—',
+            C28: design.results.PtMin !== null ? design.results.PtMin.toFixed(3) : '—',
             A29: design.results.steelCheck,
 
             // ── REINFORCEMENT PROVIDED ──
-            A34: design.inputs.bar1Count, B34: design.inputs.bar1Dia, C34: design.results.Ast1.toFixed(2),
-            A35: design.inputs.bar2Count, B35: design.inputs.bar2Dia, C35: design.results.Ast2.toFixed(2),
-            C37: design.results.AstProv.toFixed(2),
-            E33: design.results.PtProv.toFixed(3),
+            A34: design.inputs.bar1Count !== null ? design.inputs.bar1Count : '—', B34: design.inputs.bar1Dia !== null ? design.inputs.bar1Dia : '—', C34: design.results.Ast1 !== null ? design.results.Ast1.toFixed(2) : '—',
+            A35: design.inputs.bar2Count !== null ? design.inputs.bar2Count : '—', B35: design.inputs.bar2Dia !== null ? design.inputs.bar2Dia : '—', C35: design.results.Ast2 !== null ? design.results.Ast2.toFixed(2) : '—',
+            C37: design.results.AstProv !== null ? design.results.AstProv.toFixed(2) : '—',
+            E33: design.results.PtProv !== null ? design.results.PtProv.toFixed(3) : '—',
             E37: design.results.steelCheck,
 
             // ── SPACING ──
-            B40: design.results.SvMax1, B41: design.results.SvMax2, B42: design.results.minSpacing,
+            B40: design.results.SvMax1 !== null ? design.results.SvMax1.toFixed(2) : '—', B41: design.results.SvMax2 !== null ? design.results.SvMax2.toFixed(2) : '—', B42: design.results.minSpacing !== null ? design.results.minSpacing.toFixed(2) : '—',
 
             // ── SIDE FACE REINFORCEMENT ──
             A46: design.results.sfrRequired ? 'Yes' : 'No',
-            B47: design.inputs.b,
-            B48: design.inputs.D,
-            B49: design.results.sfrAreaReq, B50: design.results.sfrOneSideAreaReq,
-            A54: design.inputs.sfrCount, B54: design.inputs.sfrDia, C54: design.results.sfrAreaProv.toFixed(2),
+            B47: design.inputs.b !== null ? design.inputs.b : '—',
+            B48: design.inputs.D !== null ? design.inputs.D : '—',
+            B49: design.results.sfrAreaReq !== null ? design.results.sfrAreaReq.toFixed(2) : '—', B50: design.results.sfrOneSideAreaReq !== null ? design.results.sfrOneSideAreaReq.toFixed(2) : '—',
+            A54: design.inputs.sfrCount !== null ? design.inputs.sfrCount : '—', B54: design.inputs.sfrDia !== null ? design.inputs.sfrDia : '—', C54: design.results.sfrAreaProv !== null ? design.results.sfrAreaProv.toFixed(2) : '—',
             E53: design.results.sfrCheck,
 
             // ── SHEAR ──
-            B58: design.inputs.Vu, B59: design.results.tv.toFixed(2), B60: design.results.tcMax,
-            B61: design.results.AstProv.toFixed(2),
-            B62: design.results.As.toFixed(2),
-            B64: design.inputs.tcRatio1, C64: design.results.tcHi,
-            B65: design.inputs.tcRatio2, C65: design.results.tcLo,
-            B66: design.results.tc.toFixed(2),
+            B58: design.inputs.Vu !== null ? design.inputs.Vu : '—', B59: design.results.tv !== null ? design.results.tv.toFixed(2) : '—', B60: design.results.tcMax,
+            B61: design.results.AstProv !== null ? design.results.AstProv.toFixed(2) : '—',
+            B62: design.results.As !== null ? design.results.As.toFixed(2) : '—',
+            B64: design.inputs.tcRatio1 !== null ? design.inputs.tcRatio1 : '—', C64: design.results.tcHi !== null ? design.results.tcHi.toFixed(2) : '—',
+            B65: design.inputs.tcRatio2 !== null ? design.inputs.tcRatio2 : '—', C65: design.results.tcLo !== null ? design.results.tcLo.toFixed(2) : '—',
+            B66: design.results.tc !== null ? design.results.tc.toFixed(2) : '—',
             A68: design.results.stirrupCheck,
-            B70: design.results.Vuc, B73: design.inputs.stirrupDia,
-            B74: design.inputs.stirrupLegs, B75: design.results.Asv.toFixed(2),
-            B78: design.results.Vus.toFixed(2),
-            B81: design.results.Vusmin.toFixed(2), B83: design.results.Sv,
-            B86: design.results.SvMin1,
-            B87: design.results.d * 0.75,
-            B88: design.inputs.providedStirrupSpacing,
-            B90: design.inputs.providedStirrupSpacing,
+            B70: design.results.Vuc !== null ? design.results.Vuc : '—', B73: design.inputs.stirrupDia !== null ? design.inputs.stirrupDia : '—',
+            B74: design.inputs.stirrupLegs !== null ? design.inputs.stirrupLegs : '—', B75: design.results.Asv !== null ? design.results.Asv.toFixed(2) : '—',
+            B78: design.results.Vus !== null ? design.results.Vus.toFixed(2) : '—',
+            B81: design.results.Vusmin !== null ? design.results.Vusmin.toFixed(2) : '—', B83: design.results.Sv !== null ? design.results.Sv : '—',
+            B86: design.results.SvMin1 !== null ? design.results.SvMin1 : '—',
+            B87: design.results.d * 0.75 !== null ? design.results.d * 0.75 : '—',
+            B88: design.inputs.providedStirrupSpacing !== null ? design.inputs.providedStirrupSpacing : '—',
+            B90: design.inputs.providedStirrupSpacing !== null ? design.inputs.providedStirrupSpacing : '—',
             D81: design.results.shearCheck,
 
             //L4 SECTION
-            N9: design.results.O28, R9: design.results.L4,
-            N10: design.inputs.cover,
-            N11: design.inputs.fck,
-            N12: design.inputs.fy,
-            N13: design.inputs.b,
-            N14: design.inputs.D,
-            N15: design.results.d,
-            N16: design.results.mulimFactor,
-            N17: design.results.lenOfBeam,
-            N18: design.results.Mulim,
-            O19: design.results.muCheck,
-            N22: design.results.ptPercent.toFixed(3),
-            N23: design.results.astPercent.toFixed(2),
+            N9: design.results.O28 !== null ? design.results.O28 : '—', R9: design.results.L4 !== null ? design.results.L4 : '—',
+            N10: design.inputs.cover !== null ? design.inputs.cover : '—',
+            N11: design.inputs.fck !== null ? design.inputs.fck : '—',
+            N12: design.inputs.fy !== null ? design.inputs.fy : '—',
+            N13: design.inputs.b !== null ? design.inputs.b : '—',
+            N14: design.inputs.D !== null ? design.inputs.D : '—',
+            N15: design.results.d !== null ? design.results.d : '—',
+            N16: design.results.mulimFactor !== null ? design.results.mulimFactor : '—',
+            N17: design.results.lenOfBeam !== null ? design.results.lenOfBeam : '—',
+            N18: design.results.Mulim !== null ? design.results.Mulim : '—',
+            O19: design.results.muCheck !== null ? design.results.muCheck : '—',
+            N22: design.results.ptPercent !== null ? design.results.ptPercent.toFixed(3) : '—',
+            N23: design.results.astPercent !== null ? design.results.astPercent.toFixed(2) : '—',
 
             //FIGURE
             L29: design.results.L29,
@@ -301,6 +310,19 @@ const BeamDetailedView = () => {
                                     </svg>
                                     <span className="hidden sm:inline">Edit</span>
                                 </button>
+
+                                <button
+                                    onClick={() => setShowConfig(true)}
+                                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-white hover:bg-gray-50 text-gray-700 transition-all duration-200 border border-gray-200 shadow-sm"
+                                    title="Configuration"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    <span className="hidden sm:inline">Config</span>
+                                </button>
+
 
                                 {/* Export button */}
                                 <button onClick={() => exportToExcel(design)}
@@ -402,8 +424,14 @@ const BeamDetailedView = () => {
             <footer className="border-t border-gray-200 mt-12 py-6 text-center text-xs text-gray-500">
                 IS 456 : 2000 · Limit State Method · Detail Report
             </footer>
+
+            {/* Configuration Modal */}
+            <BeamConfigModal beamTable={design?.configuration_used} isOpen={showConfig} onClose={() => setShowConfig(false)} isReadOnly={true} />
         </div>
+
     );
+
+
 };
 
 export default BeamDetailedView;

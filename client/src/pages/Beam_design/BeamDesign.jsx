@@ -1,47 +1,77 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import axios from 'axios'
 import { calculateBeam } from '../../utils/beamCalc'
 import ResultsPanel from '../../components/ResultsPanel'
 import InputForm from '../../components/inputForm'
+import BeamConfigModal from './BeamConfigModal'
+import defaultConfig from '../../config/beamTables.json'
 
 const DEFAULT_INPUTS = {
-    beamName: 'B1', bendingMomentDirection: '',
-    Mu: '1500', Vu: '940', cover: '77.5', fck: '30', fy: '500',
-    b: '500', D: '1000',
-    bar1Count: '4', bar1Dia: '32', bar2Count: '3', bar2Dia: '25',
-    stirrupDia: '10', stirrupLegs: '4', providedStirrupSpacing: '150',
-    sfrCount: '3', sfrDia: '12',
-    tcRatio1: '1.00', tcRatio2: '1.25',
+    beamName: null, bendingMomentDirection: null,
+    Mu: null, Vu: null, cover: null, fck: null, fy: null,
+    b: null, D: null,
+    bar1Count: null, bar1Dia: null, bar2Count: null, bar2Dia: null,
+    stirrupDia: null, stirrupLegs: null, providedStirrupSpacing: null,
+    sfrCount: null, sfrDia: null,
+    tcRatio1: null, tcRatio2: null,
 }
 
 export default function BeamDesign() {
     const [inputs, setInputs] = useState(() => {
-        // try {
-        //     const saved = localStorage.getItem('beamCalcDraft');
-        //     if (saved) return JSON.parse(saved);
-        // } catch (e) {
-        //     console.error('Failed to load draft:', e);
-        // }
+        try {
+            const saved = sessionStorage.getItem('beamCalcDraft');
+            if (saved) return JSON.parse(saved);
+        } catch (e) {
+            console.error('Failed to load draft:', e);
+        }
         return DEFAULT_INPUTS;
     });
 
     const [isSaving, setIsSaving] = useState(false)
     const [saveStatus, setSaveStatus] = useState(null)  // 'ok' | 'error' | null
-    const results = calculateBeam(inputs)
+    const [showConfig, setShowConfig] = useState(false)
 
-    // useEffect(() => {
-    //     localStorage.setItem('beamCalcDraft', JSON.stringify(inputs));
-    // }, [inputs]);
+    const [config, setConfig] = useState(null);
+
+
+    useEffect(() => {
+        async function load() {
+            const res = await axios.get(
+                "http://localhost:3000/api/beamconfig",
+                { withCredentials: true }
+            );
+            setConfig(res.data);
+        }
+
+        load();
+    }, []);
+
+    const finalConfig = {
+        mulimFactor: config?.mulimFactor || defaultConfig.MULIM_FACTOR,
+        tcTable: config?.tcTable || defaultConfig.TC_TABLE,
+        tcMax: config?.tcMax || defaultConfig.TC_MAX
+    };
+
+    // console.log("final config: ", finalConfig);
+
+    useEffect(() => {
+        sessionStorage.setItem('beamCalcDraft', JSON.stringify(inputs));
+    }, [inputs]);
+
+
+    const results = useMemo(() => {
+        return calculateBeam(inputs, finalConfig);
+    }, [inputs, finalConfig]);
 
     function handleSave() {
         if (!results) return
         setIsSaving(true)
         setSaveStatus(null)
 
-        axios.post('/api/saveddesigns', { inputs, results })
+        axios.post('/api/saveddesigns', { inputs, results, finalConfig })
             .then(() => {
                 setSaveStatus('ok')
-                // localStorage.removeItem('beamCalcDraft')
+                sessionStorage.removeItem('beamCalcDraft')
             })
             .catch((err) => {
                 console.error('Save failed:', err.message)
@@ -52,6 +82,7 @@ export default function BeamDesign() {
                 setTimeout(() => setSaveStatus(null), 3000)
             })
     }
+
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -70,9 +101,36 @@ export default function BeamDesign() {
                         <div className="ml-auto">
                             <a href="/app/beam-design/saved"
                                 className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-white hover:bg-gray-50 text-gray-700 transition-all duration-200 border border-gray-200 shadow-sm">
-                                ← Saved Designs
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="w-4 h-4 flex-shrink-0"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                    strokeWidth={2}
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                    />
+                                </svg>
+
+                                <span className='hidden md:inline'> Saved Designs</span>
                             </a>
                         </div>
+                        <button
+                            onClick={() => setShowConfig(true)}
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-white hover:bg-gray-50 text-gray-700 transition-all duration-200 border border-gray-200 shadow-sm"
+                            title="Configuration"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <span className="hidden sm:inline">Config</span>
+                        </button>
+
                         {/* Save Design button */}
                         <button
                             onClick={handleSave}
@@ -128,6 +186,9 @@ export default function BeamDesign() {
             <footer className="border-t border-gray-200 mt-12 py-4 text-center text-xs text-gray-500">
                 IS 456 : 2000 · Limit State Method · For academic / verification use only
             </footer>
+
+            {/* Configuration Modal */}
+            <BeamConfigModal beamTable={finalConfig} setBeamTable={setConfig} isOpen={showConfig} onClose={() => setShowConfig(false)} />
         </div>
     )
 }

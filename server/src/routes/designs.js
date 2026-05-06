@@ -15,7 +15,7 @@ router.post('/', async (req, res) => {
     // Step 1 — Get data sent from React
     const emp_id = req.user.emp_id;
 
-    const { inputs, results } = req.body;
+    const { inputs, results, finalConfig } = req.body;
 
     // Step 2 — Basic validation
     if (!inputs || !results) {
@@ -26,20 +26,22 @@ router.post('/', async (req, res) => {
     try {
         const { rows } = await pool.query(
             `INSERT INTO beam_designs
-                (beam_name, beam_type, inputs, results, user_id)
+                (beam_name, beam_type, inputs, results, user_id, configuration_used)
              VALUES
-                ($1,  $2,  $3,  $4,  $5)
+                ($1,  $2,  $3,  $4,  $5, $6)
              RETURNING *`,
             [
                 // Identification
                 inputs.beamName,          // $1
-                inputs.bendingMomentDirection,          // $2
+                inputs.bendingMomentDirection,// $2
                 // Inputs
                 inputs,                 // $3  
                 // Results
                 results,                // $4   
                 // User ID
-                emp_id                  // $5
+                emp_id,                 // $5
+                //Configuration used         
+                finalConfig             // $6
             ]
         );
 

@@ -1,44 +1,9 @@
+
+
 // ─── IS:875 Part-3 Wind Load Calculator Utilities ──────────────────────────
 
-// Basic Wind Speed table (city → Vb in m/s)
-export const CITY_VB = [
-  { city: "Agra", vb: 47 }, { city: "Ahmedabad", vb: 39 }, { city: "Ajmer", vb: 47 },
-  { city: "Almora", vb: 47 }, { city: "Amritsar", vb: 47 }, { city: "Asansol", vb: 47 },
-  { city: "Aurangabad", vb: 39 }, { city: "Bahraich", vb: 47 }, { city: "Bengaluru", vb: 33 },
-  { city: "Barauni", vb: 47 }, { city: "Bareilly", vb: 47 }, { city: "Bhatinda", vb: 47 },
-  { city: "Bhilai", vb: 39 }, { city: "Bhopal", vb: 39 }, { city: "Bhubaneswar", vb: 50 },
-  { city: "Bhuj", vb: 50 }, { city: "Bikaner", vb: 47 }, { city: "Bokaro", vb: 47 },
-  { city: "Bombay/Mumbai", vb: 44 }, { city: "Calcutta/Kolkata", vb: 50 },
-  { city: "Calicut/Kozhikode", vb: 39 }, { city: "Chandigarh", vb: 47 },
-  { city: "Coimbatore", vb: 39 }, { city: "Cuttack", vb: 50 }, { city: "Darbhanga", vb: 55 },
-  { city: "Darjeeling", vb: 47 }, { city: "Dehradun", vb: 47 }, { city: "Delhi", vb: 47 },
-  { city: "Durgapur", vb: 47 }, { city: "Gangtok", vb: 47 }, { city: "Guwahati", vb: 50 },
-  { city: "Gaya", vb: 39 }, { city: "Gorakhpur", vb: 47 }, { city: "Hyderabad", vb: 44 },
-  { city: "Imphal", vb: 47 }, { city: "Jabalpur", vb: 47 }, { city: "Jaipur", vb: 47 },
-  { city: "Jamshedpur", vb: 47 }, { city: "Jhansi", vb: 47 }, { city: "Jodhpur", vb: 47 },
-  { city: "Kanpur", vb: 47 }, { city: "Kohima", vb: 44 }, { city: "Kurnool", vb: 39 },
-  { city: "Lakshadweep", vb: 39 }, { city: "Lucknow", vb: 47 }, { city: "Ludhiana", vb: 47 },
-  { city: "Madras/Chennai", vb: 50 }, { city: "Madurai", vb: 39 }, { city: "Mandi", vb: 39 },
-  { city: "Mangalore", vb: 39 }, { city: "Moradabad", vb: 47 }, { city: "Mysore", vb: 33 },
-  { city: "Nagpur", vb: 44 }, { city: "Nainital", vb: 47 }, { city: "Nasik", vb: 39 },
-  { city: "Nellore", vb: 50 }, { city: "Panjim/Goa", vb: 39 }, { city: "Patiala", vb: 47 },
-  { city: "Patna", vb: 47 }, { city: "Pondicherry", vb: 50 }, { city: "PortBlair", vb: 44 },
-  { city: "Rajkot", vb: 39 }, { city: "Ranchi", vb: 39 }, { city: "Roorkee", vb: 39 },
-  { city: "Rourkela", vb: 39 }, { city: "Shimla", vb: 39 }, { city: "Srinagar", vb: 39 },
-  { city: "Surat", vb: 44 }, { city: "Tiruchirappalli", vb: 47 }, { city: "Trivandrum", vb: 39 },
-  { city: "Udaipur", vb: 47 }, { city: "Vadodara", vb: 44 }, { city: "Varanasi", vb: 47 },
-  { city: "Vijayawada", vb: 50 }, { city: "Visakhapatnam", vb: 50 },
-];
-
 // K1 — Risk Coefficient (IS:875 Table 1)
-// Each design life maps to exactly one structure type.
-// Values keyed by wind speed (Vb in m/s).
-const K1_TABLE = {
-  50: { General: { 33: 1, 39: 1, 44: 1, 47: 1, 50: 1, 55: 1 } },
-  5: { Temporary: { 33: 0.82, 39: 0.76, 44: 0.73, 47: 0.71, 50: 0.70, 55: 0.67 } },
-  25: { LowHazard: { 33: 0.94, 39: 0.92, 44: 0.91, 47: 0.90, 50: 0.90, 55: 0.89 } },
-  100: { Important: { 33: 1.05, 39: 1.06, 44: 1.07, 47: 1.07, 50: 1.08, 55: 1.08 } },
-};
+
 
 export const DESIGN_LIVES = ["50", "5", "25", "100"];
 
@@ -51,20 +16,13 @@ export const DESIGN_LIFE_TYPE_MAP = {
 };
 
 /** Returns K1 value for given designLife and Vb (auto-resolves structure type) */
-export function getK1(designLife, vb) {
+export function getK1(designLife, vb, winloadTable) {
   const structureType = DESIGN_LIFE_TYPE_MAP[String(designLife)];
   if (!structureType) return null;
-  return K1_TABLE?.[designLife]?.[structureType]?.[vb] ?? null;
+  return winloadTable.k1Table?.[designLife]?.vbValues?.[vb] ?? null;
 }
 
-// K2 — Terrain & Height Factor (IS:875 Table 2)
-const K2_HEIGHTS = [10, 15, 20, 30, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500];
-const K2_VALUES = {
-  "1": [1.05, 1.09, 1.12, 1.15, 1.20, 1.26, 1.30, 1.32, 1.34, 1.35, 1.35, 1.35, 1.35, 1.35],
-  "2": [1.00, 1.05, 1.07, 1.12, 1.17, 1.24, 1.28, 1.30, 1.32, 1.34, 1.35, 1.35, 1.35, 1.35],
-  "3": [0.91, 0.97, 1.01, 1.06, 1.12, 1.20, 1.24, 1.27, 1.29, 1.31, 1.32, 1.34, 1.35, 1.35],
-  "4": [0.80, 0.80, 0.80, 0.97, 1.10, 1.20, 1.24, 1.27, 1.28, 1.30, 1.31, 1.32, 1.33, 1.34],
-};
+
 
 // Moved linearInterpolate above getK1 so it's available for K1 interpolation
 function linearInterpolate(x, x0, x1, y0, y1) {
@@ -73,16 +31,17 @@ function linearInterpolate(x, x0, x1, y0, y1) {
 }
 
 /** Returns K2 interpolated for given height and terrain category (1-4) */
-export function getK2(height, terrainCategory) {
-  const vals = K2_VALUES[String(terrainCategory)];
+export function getK2(height, terrainCategory, winloadTable) {
+  const vals = winloadTable.k2Table.terrainCategories[String(terrainCategory)];
+  console.log(vals)
   if (!vals) return null;
   const H = Math.max(height, 10); // below 10m → use 10m value
-  const maxH = K2_HEIGHTS[K2_HEIGHTS.length - 1];
+  const maxH = winloadTable.k2Table.heights[winloadTable.k2Table.heights.length - 1];
   if (H >= maxH) return vals[vals.length - 1];
 
-  for (let i = 0; i < K2_HEIGHTS.length - 1; i++) {
-    if (H >= K2_HEIGHTS[i] && H <= K2_HEIGHTS[i + 1]) {
-      return linearInterpolate(H, K2_HEIGHTS[i], K2_HEIGHTS[i + 1], vals[i], vals[i + 1]);
+  for (let i = 0; i < winloadTable.k2Table.heights.length - 1; i++) {
+    if (H >= winloadTable.k2Table.heights[i] && H <= winloadTable.k2Table.heights[i + 1]) {
+      return linearInterpolate(H, winloadTable.k2Table.heights[i], winloadTable.k2Table.heights[i + 1], vals[i], vals[i + 1]);
     }
   }
   return vals[0];
@@ -98,7 +57,8 @@ export function getKa(area) {
 }
 
 /** Full wind load calculation — returns all intermediate and final values */
-export function calculateWindLoad(inp) {
+export function calculateWindLoad(inp, winloadTable) {
+  // console.log(winloadTable);
   // Coerce string inputs to numbers centrally
   const parsed = { ...inp };
   const numKeys = ['H', 'W', 'L', 'k2Custom', 'k3Custom', 'cpi', 'cpeA', 'cpeB', 'cpeC', 'cpeD'];
@@ -123,12 +83,12 @@ export function calculateWindLoad(inp) {
   // Guard: if critical inputs are zero/missing, return null (empty state)
   if (!H || !W || !L || Number(H) <= 0 || Number(W) <= 0 || Number(L) <= 0) return null;
 
-  const vb = CITY_VB.find(c => c.city === city)?.vb ?? null;
+  const vb = winloadTable.cityWindSpeeds.find(c => c.city === city)?.vb ?? null;
 
-  const k1 = getK1(designLife, vb);
+  const k1 = getK1(designLife, vb, winloadTable);
   const k1Invalid = k1 === null;
 
-  const k2Auto = getK2(H, terrainCategory);
+  const k2Auto = getK2(H, terrainCategory, winloadTable);
   const k2 = (k2Custom !== undefined && k2Custom !== null && String(k2Custom).trim() !== '') ? parseFloat(k2Custom) : k2Auto;
 
   const k3 = k3Type === 'flat' ? 1.0 : (parseFloat(k3Custom) || 1.0);
@@ -142,16 +102,10 @@ export function calculateWindLoad(inp) {
   const ka = getKa(area);
 
   // Kd
-  const kdMap = {
-    'rectangular': 0.9,
-    'circular_polygon': 1.0,
-    'lattice_chimney': 1.0,
-  };
-  const kdVal = kdMap[kd] ?? 0.9;
+  const kdVal = winloadTable.kdMap[kd] ?? 0.9;
 
   // Kc
-  const kcMap = { '1': 1.0, '2': 0.9, '3plus': 0.8 };
-  const kcVal = kcMap[kcType] ?? 1.0;
+  const kcVal = winloadTable.kcMap[kcType] ?? 1.0;
 
   let pd = null;
   let pdMinimumGoverns = false;

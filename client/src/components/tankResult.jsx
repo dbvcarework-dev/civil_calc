@@ -15,7 +15,7 @@ const CheckRow = ({ label, passed, details }) => {
                     e.stopPropagation();
                     setExpanded((prev) => !prev);
                 }}
-                className="w-full flex items-center justify-between p-3.5 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 rounded-xl transition-all cursor-pointer relative z-10 select-none"
+                className="w-full flex items-center justify-between p-3.5 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 rounded-xl transition-all cursor-pointer relative  select-none"
             >
                 <div className="flex items-center gap-2.5 pointer-events-none">
                     <div className={`p-1 rounded-md transition-colors ${expanded ? 'bg-indigo-50 text-indigo-600' : 'text-gray-400 hover:bg-gray-100'}`}>

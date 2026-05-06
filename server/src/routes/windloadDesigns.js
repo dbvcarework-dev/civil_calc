@@ -6,7 +6,7 @@ const router = Router();
 // POST /api/windload - Save a new wind load design
 router.post('/', async (req, res) => {
     const emp_id = req.user.emp_id;
-    const { project_name, inputs, results } = req.body;
+    const { project_name, inputs, results, finalConfig } = req.body;
 
     if (!project_name || !inputs || !results) {
         return res.status(400).json({ error: 'project_name, inputs, and results are required' });
@@ -14,9 +14,9 @@ router.post('/', async (req, res) => {
 
     try {
         const { rows } = await pool.query(
-            `INSERT INTO windload_designs (project_name, inputs, results, user_id)
-             VALUES ($1, $2, $3, $4) RETURNING *`,
-            [project_name, inputs, results, emp_id]
+            `INSERT INTO windload_designs (project_name, inputs, results, user_id, configuration_used)
+             VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+            [project_name, inputs, results, emp_id, finalConfig]
         );
         res.status(201).json({ message: 'Wind load design saved successfully', data: rows[0] });
     } catch (err) {

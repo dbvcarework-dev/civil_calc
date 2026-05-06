@@ -1,35 +1,15 @@
-
-
-// ── LOOKUP TABLES from IS 456 ──────────────────────────
-const TC_TABLE = {
-    0.15: { 15: 0.28, 20: 0.28, 25: 0.29, 30: 0.29, 35: 0.29, 40: 0.30 },
-    0.25: { 15: 0.35, 20: 0.36, 25: 0.36, 30: 0.37, 35: 0.37, 40: 0.38 },
-    0.50: { 15: 0.46, 20: 0.48, 25: 0.49, 30: 0.50, 35: 0.50, 40: 0.51 },
-    0.75: { 15: 0.54, 20: 0.56, 25: 0.57, 30: 0.59, 35: 0.59, 40: 0.60 },
-    1.00: { 15: 0.60, 20: 0.62, 25: 0.64, 30: 0.66, 35: 0.67, 40: 0.68 },
-    1.25: { 15: 0.64, 20: 0.67, 25: 0.70, 30: 0.71, 35: 0.73, 40: 0.74 },
-    1.50: { 15: 0.68, 20: 0.72, 25: 0.74, 30: 0.76, 35: 0.78, 40: 0.79 },
-    1.75: { 15: 0.71, 20: 0.75, 25: 0.78, 30: 0.80, 35: 0.82, 40: 0.84 },
-    2.00: { 15: 0.71, 20: 0.79, 25: 0.82, 30: 0.84, 35: 0.86, 40: 0.88 },
-    2.25: { 15: 0.71, 20: 0.81, 25: 0.85, 30: 0.88, 35: 0.90, 40: 0.92 },
-    2.50: { 15: 0.71, 20: 0.82, 25: 0.88, 30: 0.91, 35: 0.93, 40: 0.95 },
-    2.75: { 15: 0.71, 20: 0.82, 25: 0.90, 30: 0.94, 35: 0.96, 40: 0.98 },
-    3.00: { 15: 0.71, 20: 0.82, 25: 0.92, 30: 0.96, 35: 0.99, 40: 1.01 }
-};
-const TC_MAX = { 15: 2.5, 20: 2.8, 25: 3.1, 30: 3.5, 35: 3.7, 40: 4.0 }
-
-const MULIM_FACTOR = { 250: 0.149, 415: 0.138, 500: 0.133 }
+import beamTables from "../config/beamTables";
 
 // ── INTERPOLATION (for tc table lookup) ───────────────
-function getTc(ratio, fck, r1, r2) {
+function getTc(ratio, fck, r1, r2, tcTable) {
     const grade = [15, 20, 25, 30, 35, 40].includes(fck) ? fck : 40
 
     // Use user-provided bounds if available, else find automatically
     const lo = r1 ?? 0.75
     const hi = r2 ?? 1.00
 
-    const tcLo = TC_TABLE[lo]?.[grade] ?? 0.50
-    const tcHi = TC_TABLE[hi]?.[grade] ?? 0.60
+    const tcLo = tcTable[Number(lo).toFixed(2)]?.[grade] ?? 0.50
+    const tcHi = tcTable[Number(hi).toFixed(2)]?.[grade] ?? 0.60
 
     // Linear interpolation
     const tc = tcLo + ((tcHi - tcLo) / (hi - lo)) * (ratio - lo)
@@ -47,7 +27,8 @@ function getTc(ratio, fck, r1, r2) {
 const barArea = (dia, count) => (Math.PI / 4) * dia * dia * count
 
 // ── MAIN FUNCTION — this is the entire brain ──────────
-export function calculateBeam(inp) {
+export function calculateBeam(inp, beamTable) {
+    // console.log(beamTable)
     // Coerce numeric strings to numbers centrally
     const parsed = { ...inp };
     for (const k in parsed) {
@@ -70,7 +51,7 @@ export function calculateBeam(inp) {
     if (!r.d || !fck || !fy || !b) return null
 
     // FLEXURE
-    r.mulimFactor = MULIM_FACTOR[fy] ?? 0.133
+    r.mulimFactor = beamTable.mulimFactor[fy] ?? 0.133
     r.Mulim = (r.mulimFactor * fck * b * r.d * r.d) / 1e6
     r.muOk = Mu < r.Mulim
     r.muCheck = r.muOk ? 'OK' : 'Increase section size'
@@ -100,12 +81,12 @@ export function calculateBeam(inp) {
 
     // SHEAR
     r.tv = (Vu * 1000) / (b * r.d)
-    r.tcMax = TC_MAX[fck] ?? 3.5
+    r.tcMax = beamTable.tcMax[fck] ?? 3.5
     r.ratio100 = (r.AstProv * 100) / (b * r.d)
     r.As = r.AstProv * 100 / (b * D)
 
     // tc Calculation details
-    const tcData = getTc(r.As, fck, parsed.tcRatio1, parsed.tcRatio2)
+    const tcData = getTc(r.As, fck, parsed.tcRatio1, parsed.tcRatio2, beamTable.tcTable)
     r.tcLo = tcData.loTc
     r.tcHi = tcData.hiTc
     r.tcRatio1 = tcData.loRatio
@@ -117,7 +98,8 @@ export function calculateBeam(inp) {
     r.shearDesign = r.tv > r.tc
     r.Vuc = (r.tc * b * r.d) / 1000
     r.Asv = barArea(stirrupDia, stirrupLegs)
-    r.Vus = Math.max(Vu - r.Vuc, 0)
+    r.Vus = Vu - r.Vuc;
+    //  Math.max(Vu - r.Vuc, 0)
 
     // Spacing from shear demand
     r.SvCalc = r.Vus > 0
@@ -132,7 +114,7 @@ export function calculateBeam(inp) {
     r.SvMax2 = 300               // ← and this
     r.minSpacing = Math.min(r.SvMax1, r.SvMax2)
 
-    r.Sv = r.Vus > 0 ? (0.87 * fy * r.Asv * r.d) / (r.Vus * 1000) : null
+    r.Sv = (0.87 * fy * r.Asv * r.d) / (r.Vus * 1000)
 
 
 

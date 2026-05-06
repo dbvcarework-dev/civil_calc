@@ -1,5 +1,6 @@
 import React from 'react';
-import { CITY_VB, DESIGN_LIVES, DESIGN_LIFE_TYPE_MAP } from '../utils/windLoadCalc';
+import { DESIGN_LIVES, DESIGN_LIFE_TYPE_MAP } from '../utils/windLoadCalc';
+import { cityWindSpeeds } from "../config/winLoadTables.json"
 
 // ── Shared primitives matching app theme ──────────────────────────────────────
 
@@ -15,8 +16,8 @@ const InputNum = ({ id, value, onChange, min, placeholder }) => (
         value={value ?? ''}
         onChange={(e) => {
             const raw = e.target.value;
-            if (raw !== '' && isNaN(Number(raw))) return; // Ensure valid number
-            if (min === 0 && raw !== '' && Number(raw) < 0) return;
+            if (raw !== '' && raw !== '-' && isNaN(Number(raw))) return; // Ensure valid number
+            if (min === 0 && raw !== '' && raw !== '-' && Number(raw) < 0) return;
             // cpe coefficients can be negative, so we only restrict if min === 0
             if (min !== undefined && min !== 0 && raw !== '' && Number(raw) < min) {
                 // Not returning early here to allow user to type negative signs initially
@@ -169,7 +170,7 @@ const WindLoadInput = ({ inputs, onChange, results }) => {
                         <div>
                             <Label>City / Location</Label>
                             <SelectField id="city" value={inputs.city} onChange={set('city')}>
-                                {CITY_VB.map(c => (
+                                {cityWindSpeeds.map(c => (
                                     <option key={c.city} value={c.city}>{c.city}</option>
                                 ))}
                             </SelectField>
