@@ -12,6 +12,7 @@ import SavedWindLoad from './pages/Wind_load/WindLoadSummary'
 import WindLoadDetailedView from './pages/Wind_load/WindLoadDetailed'
 import Sidebar from './components/Sidebar'
 import AuthPage from './pages/AuthPage'
+import PrivateRoute from './components/PrivateRoute'
 
 // ── Layout Component ──────────────────────────────────
 const MainLayout = () => {
@@ -33,8 +34,9 @@ const App = () => {
       <Route path="/login" element={<Navigate to="/" replace />} />
       <Route path="/signup" element={<Navigate to="/" replace />} />
 
-      {/* App Routes (Protected-ready structure) */}
-      <Route path="/app" element={<MainLayout />}>
+      {/* Protected App Routes */}
+      <Route path="/app" element={<PrivateRoute />}>
+        <Route element={<MainLayout />}>
         {/* Default to Beam Design */}
         <Route index element={<Navigate to="beam-design" replace />} />
 
@@ -57,6 +59,7 @@ const App = () => {
           <Route index element={<WindLoadCalc />} />
           <Route path="saved" element={<SavedWindLoad />} />
           <Route path=":id" element={<WindLoadDetailedView />} />
+        </Route>
         </Route>
       </Route>
       {/* Catch-all Redirect */}

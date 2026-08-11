@@ -121,7 +121,7 @@ const BeamConfigModal = ({ isOpen, onClose, beamTable, setBeamTable, isReadOnly 
 
             // Fetch updated config immediately
             const res = await axios.get(
-                "http://localhost:3000/api/beamconfig",
+                "/api/beamconfig",
                 { withCredentials: true }
             );
             setBeamTable(res.data);

@@ -183,7 +183,7 @@ const WindConfigModal = ({ isOpen, onClose, windTable, setWindTable, isReadOnly 
                 cityWindSpeeds,
                 changes
             }, { withCredentials: true });
-            const res = await axios.get("http://localhost:3000/api/windconfig", { withCredentials: true });
+            const res = await axios.get("/api/windconfig", { withCredentials: true });
             setWindTable(res.data);
             setShowPopup(false);
         } catch (error) {
@@ -286,9 +286,9 @@ const WindConfigModal = ({ isOpen, onClose, windTable, setWindTable, isReadOnly 
                         </h3>
                         <div className="overflow-x-auto rounded-2xl border border-gray-100 max-h-64 overflow-y-auto">
                             <table className="w-full text-sm text-left border-collapse">
-                                <thead className="sticky top-0 bg-gray-50 shadow-sm ">
+                                <thead className="sticky top-0 bg-gray-50 shadow-sm z-20">
                                     <tr className="bg-gray-50 border-b border-gray-100">
-                                        <th className="px-4 py-3 font-semibold text-gray-600 sticky left-0 bg-gray-50 z-20">Height (m)</th>
+                                        <th className="px-4 py-3 font-semibold text-gray-600 sticky left-0 bg-gray-50 ">Height (m)</th>
                                         {terrainCats.map(cat => (
                                             <th key={cat} className="px-4 py-3 font-semibold text-gray-600 text-center">Category {cat}</th>
                                         ))}

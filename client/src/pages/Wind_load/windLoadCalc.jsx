@@ -59,7 +59,7 @@ const WindLoadCalc = () => {
     useEffect(() => {
         async function load() {
             const res = await axios.get(
-                "http://localhost:3000/api/windconfig",
+                "/api/windconfig",
                 { withCredentials: true }
             );
 

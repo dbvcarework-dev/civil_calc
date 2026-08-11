@@ -17,19 +17,18 @@ require('dotenv').config();
 const windConfigRoutes = require('./src/routes/windConfig');
 
 
-pool.connect().then(() => {
-    console.log('Database connected successfully');
-}).catch((err) => {
-    console.log('Database connection failed', err);
-});
+const { initDatabase } = require('./src/dbInit');
 
 const app = express();
 
 // ── Middleware ──────────────────────────────────────────
+const corsOrigin = process.env.CORS_ORIGIN 
+    ? process.env.CORS_ORIGIN.split(',').map(o => o.trim()) 
+    : ['http://localhost:5173', 'https://localhost', 'http://localhost'];
 app.use(cors({
-    origin: 'http://localhost:5173', // or your frontend URL
+    origin: corsOrigin,
     credentials: true
-}));           // allow all origins (fine for local dev)
+}));
 app.use(express.json());   // parse JSON request bodies
 app.use(cookieParser());
 
@@ -43,6 +42,12 @@ app.use('/api/users', userRoutes);
 app.use('/api/login', loginRoutes);
 app.use('/api/beamconfig', auth, beamConfigRoutes);
 app.use('/api/windconfig', auth, windConfigRoutes);
+
+// ── Auth Check ─────────────────────────────────────────
+// Lightweight endpoint to verify cookie-based JWT from the client
+app.get('/api/auth/me', auth, (req, res) => {
+    res.status(200).json({ user: req.user });
+});
 
 
 
@@ -94,6 +99,13 @@ app.get('/', async (req, res) => {
 });
 
 // ── Start Server ─────────────────────────────────────────
-app.listen(3000, () => {
-    console.log('Server running at http://localhost:3000');
+const PORT = process.env.SERVER_PORT || 3000;
+
+initDatabase(pool).then(() => {
+    app.listen(PORT, () => {
+        console.log(`Server running at http://localhost:${PORT}`);
+    });
+}).catch((err) => {
+    console.error('Failed to initialize database schema. Exiting...', err);
+    process.exit(1);
 });

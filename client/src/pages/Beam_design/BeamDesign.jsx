@@ -37,7 +37,7 @@ export default function BeamDesign() {
     useEffect(() => {
         async function load() {
             const res = await axios.get(
-                "http://localhost:3000/api/beamconfig",
+                "/api/beamconfig",
                 { withCredentials: true }
             );
             setConfig(res.data);

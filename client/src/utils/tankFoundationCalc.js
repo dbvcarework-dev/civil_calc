@@ -423,9 +423,9 @@ export function calculateTankFoundation(inputs) {
 // ─────────────────────────────────────────────────────────────
 export const defaultInputs = {
     tankName: null, tankID: null, bcd: null, totalHeightEqpt: null, liquidLevel: null,
-    waterDensity: null, liquidDensity: null,
+    waterDensity:null, liquidDensity: null,
     emptyWtTank: null, operatingWtTank: null, hydrotestWtTank: null,
-    tankBottomPlateThk: null, thkSandBitumen: null, thkM30Conc: null, thkM75Conc: null,
+    tankBottomPlateThk: null, thkSandBitumen: null, thkM30Conc:null, thkM75Conc: null,
     heightRBAboveGL: null, depthRBBelowGL: null, depthFdnRaft: null,
     thkRingBeamWall: null, widthRingBeamRaft: null,
     sbcAtFdnDepth: null, Ka: null, mu: null,

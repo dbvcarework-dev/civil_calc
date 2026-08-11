@@ -1,0 +1,84 @@
+services:
+  # ── Database Service (PostgreSQL) ────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: civil-calc-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-pass123}
+      POSTGRES_DB: ${DB_NAME:-first_db}
+      PGPORT: 5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    # Maps Host Port 5434 to Container Port 5432 (Avoids host port 5432 conflict)
+    ports:
+      - "127.0.0.1:5434:5432"
+    networks:
+      - civil-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-first_db} -p 5432"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ── API Backend Service ──────────────────────────────────
+  api:
+    image: vatsal1811/civil-calc-api:latest
+    container_name: civil-calc-api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      SERVER_PORT: 3000
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-pass123}
+      DB_NAME: ${DB_NAME:-first_db}
+      DB_HOST: db
+      DB_PORT: 5432
+      JWT_SECRET: ${JWT_SECRET:-057f8abf94ec684c9dda398a7f37ffa484deda6915a6793021ecc6209a79cd70}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:9000,https://localhost:8082}
+    networks:
+      - civil-network
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # ── Web Frontend (Nginx) ─────────────────────────────────
+  web:
+    image: vatsal1811/civil-calc-web:latest
+    container_name: civil-calc-web
+    restart: unless-stopped
+    # Maps Host Port 8082 to Container Port 8001, and HTTPS_PORT (default 443) to Container Port 443
+    ports:
+      - "9000:8001"
+      - "8082:443"
+    volumes:
+      - ./civilcalcapp.crt:/etc/nginx/certs/civilcalcapp.crt:ro
+      - ./civilcalcapp.key:/etc/nginx/certs/civilcalcapp.key:ro
+    networks:
+      - civil-network
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--no-check-certificate", "--spider", "https://localhost:443/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+# ── Persistent Storage & Networking ───────────────────────
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  civil-network:
+    driver: bridge

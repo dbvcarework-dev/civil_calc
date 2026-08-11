@@ -18,7 +18,7 @@ const AuthPage = () => {
     const handleLogin = (e) => {
         e.preventDefault();
         setIsLoading(true);
-        axios.post('http://localhost:3000/api/login', {
+        axios.post('/api/login', {
             employee_id: employeeId,
             password: password
         }, { withCredentials: true }).then((res) => {
@@ -35,7 +35,7 @@ const AuthPage = () => {
     const handleRegister = (e) => {
         e.preventDefault();
         setIsLoading(true);
-        axios.post('http://localhost:3000/api/users', {
+        axios.post('/api/users', {
             employee_id: employeeId,
             name: name,
             password: password

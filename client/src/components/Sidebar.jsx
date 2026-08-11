@@ -1,5 +1,11 @@
 import React, { useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
+
+const SESSION_STORAGE_KEYS = [
+    'beamCalcDraft',
+    'tankFoundationCalcDraft',
+    'windLoadCalcDraft',
+];
 
 const navLinkClasses = ({ isActive }) =>
     `flex items-center px-4 py-2.5 rounded-xl font-medium transition-all duration-200 ${isActive
@@ -15,6 +21,20 @@ const subLinkClasses = ({ isActive }) =>
 
 const Sidebar = () => {
     const [isOpen, setIsOpen] = useState(false);
+    const navigate = useNavigate();
+
+    const handleLogout = async () => {
+        try {
+            await fetch('/api/login/logout', { method: 'POST', credentials: 'include' });
+        } catch (err) {
+            // best-effort — even if fetch fails, clear client state
+            console.error('Logout request failed:', err);
+        }
+        // Clear all module session drafts
+        SESSION_STORAGE_KEYS.forEach(key => sessionStorage.removeItem(key));
+        navigate('/');
+    };
+
 
     return (
         <>
@@ -103,7 +123,12 @@ const Sidebar = () => {
                 <div className="p-5 border-t border-gray-50 bg-gray-50/50 mt-auto shrink-0">
                     <div className="flex items-center justify-between text-[10px] font-bold text-gray-400">
                         <span>CIVIL CALC</span>
-                        <NavLink to="/" className="text-red-400 bg-red-200/50 px-4 py-1 rounded-sm hover:text-red-700">LOGOUT</NavLink>
+                        <button
+                            onClick={handleLogout}
+                            className="text-red-400 bg-red-200/50 px-4 py-1 rounded-sm hover:text-red-700 hover:bg-red-100 transition-colors duration-150 font-bold cursor-pointer"
+                        >
+                            LOGOUT
+                        </button>
                     </div>
                 </div>
             </aside>

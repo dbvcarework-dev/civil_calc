@@ -7,11 +7,11 @@ require('dotenv').config();
 
 
 const pool = new Pool({
-    user: process.env.USER,
-    host: process.env.HOST,
-    database: process.env.DATABASE,
-    password: process.env.PASSWORD,
-    port: process.env.PORT,
+    user: process.env.DB_USER || process.env.USER,
+    host: process.env.DB_HOST || process.env.HOST,
+    database: process.env.DB_NAME || process.env.DATABASE,
+    password: process.env.DB_PASSWORD || process.env.PASSWORD,
+    port: process.env.DB_PORT || process.env.PORT,
 });
 
 module.exports = pool;
