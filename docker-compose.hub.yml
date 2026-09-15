@@ -25,7 +25,10 @@ services:
 
   # ── API Backend Service ──────────────────────────────────
   api:
-    image: vatsal1811/civil-calc-api:latest
+    # DOCKERHUB_USERNAME and IMAGE_TAG are supplied by the CI deploy step
+    # (exported in the shell before `docker compose` runs) or default to
+    # 'vatsal1811' / 'latest' for local/manual use.
+    image: ${DOCKERHUB_USERNAME}/civil-calc-api:${IMAGE_TAG:-latest}
     container_name: civil-calc-api
     restart: unless-stopped
     environment:
@@ -52,7 +55,7 @@ services:
 
   # ── Web Frontend (Nginx) ─────────────────────────────────
   web:
-    image: vatsal1811/civil-calc-web:latest
+    image: ${DOCKERHUB_USERNAME}/civil-calc-web:${IMAGE_TAG:-latest}
     container_name: civil-calc-web
     restart: unless-stopped
     # Maps Host Port 8082 to Container Port 8001, and HTTPS_PORT (default 443) to Container Port 443

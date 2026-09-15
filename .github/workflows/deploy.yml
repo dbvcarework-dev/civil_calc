@@ -1,0 +1,184 @@
+name: Build, Push & Deploy Civil Calc App
+
+# ── Trigger: only on pushes to main ───────────────────────────────
+on:
+  push:
+    branches: [main]
+
+# ── Prevent overlapping deploys from stacking up ──────────────────
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  API_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/civil-calc-api
+  WEB_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/civil-calc-web
+
+jobs:
+  # ════════════════════════════════════════════════════════════════
+  # JOB 1: Build both images (api + web) and push to Docker Hub
+  # ════════════════════════════════════════════════════════════════
+  build-and-push:
+    runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Compute short commit SHA (for traceability tag)
+        id: sha
+        run: echo "short_sha=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Look up the highest existing "vN" tag on Docker Hub for civil-calc-api
+      # and bump it by one (starts at v1 if the repo has no version tags yet).
+      # Both images share this version so api/web always deploy in lockstep.
+      - name: Determine next version tag from Docker Hub
+        id: version
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          # Docker Hub's tag-listing API needs a short-lived JWT, obtained by
+          # exchanging the username + access token via the login endpoint.
+          HUB_TOKEN=$(curl -s -H "Content-Type: application/json" -X POST \
+            -d "{\"username\": \"${DOCKERHUB_USERNAME}\", \"password\": \"${DOCKERHUB_TOKEN}\"}" \
+            https://hub.docker.com/v2/users/login/ | jq -r '.token // empty')
+
+          LAST=$(curl -s -H "Authorization: Bearer ${HUB_TOKEN}" \
+            "https://hub.docker.com/v2/repositories/${DOCKERHUB_USERNAME}/civil-calc-api/tags?page_size=100" \
+            | jq -r '.results[]?.name // empty' \
+            | grep -E '^v[0-9]+$' \
+            | sed 's/^v//' \
+            | sort -n \
+            | tail -1)
+
+          if [ -z "$LAST" ]; then
+            NEXT=1
+          else
+            NEXT=$((LAST + 1))
+          fi
+
+          echo "version=v${NEXT}" >> "$GITHUB_OUTPUT"
+          echo "==> Next version tag: v${NEXT}"
+
+      # Backend (Node.js/Express API) — build context: ./server
+      - name: Build and push API image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./server
+          file: ./server/Dockerfile
+          push: true
+          tags: |
+            ${{ env.API_IMAGE }}:${{ steps.version.outputs.version }}
+            ${{ env.API_IMAGE }}:${{ steps.sha.outputs.short_sha }}
+            ${{ env.API_IMAGE }}:latest
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,mode=max,scope=api
+
+      # Frontend (React + Nginx) — build context: ./client
+      - name: Build and push Web image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./client
+          file: ./client/Dockerfile
+          push: true
+          tags: |
+            ${{ env.WEB_IMAGE }}:${{ steps.version.outputs.version }}
+            ${{ env.WEB_IMAGE }}:${{ steps.sha.outputs.short_sha }}
+            ${{ env.WEB_IMAGE }}:latest
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web
+
+  # ════════════════════════════════════════════════════════════════
+  # JOB 2: Deploy directly on the app server.
+  # Runs on a SELF-HOSTED runner installed on the 192.168.13.123 box
+  # (or another machine on that private LAN) — GitHub-hosted runners
+  # cannot reach a private IP, so no SSH hop is needed or used here;
+  # the job executes locally where docker/docker compose already live.
+  # Depends on build-and-push succeeding first.
+  # ════════════════════════════════════════════════════════════════
+  deploy:
+    needs: build-and-push
+    runs-on: [self-hosted, civil-calc]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Keep the server's compose file in sync with what's in git, without
+      # touching anything else already in the deploy directory (.env,
+      # TLS certs). Source of truth in the repo is docker-compose.hub.yml;
+      # the deploy directory keeps its existing filename docker-compose.yml.
+      - name: Sync compose file into deploy directory
+        run: cp docker-compose.hub.yml "${{ secrets.SERVER_DEPLOY_PATH }}/docker-compose.yml"
+
+      - name: Deploy (pull, health-check, rollback on failure)
+        working-directory: ${{ secrets.SERVER_DEPLOY_PATH }}
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          IMAGE_TAG: ${{ needs.build-and-push.outputs.image_tag }}
+        run: |
+          set -euo pipefail
+
+          COMPOSE="docker compose -f docker-compose.yml"
+
+          # ── Snapshot the currently running images so we can roll
+          # back to them if the new deployment fails its health check.
+          # Tagged locally as ":rollback" — no registry round-trip needed.
+          OLD_API_ID=$(docker inspect --format='{{.Image}}' civil-calc-api 2>/dev/null || true)
+          OLD_WEB_ID=$(docker inspect --format='{{.Image}}' civil-calc-web 2>/dev/null || true)
+          if [ -n "$OLD_API_ID" ]; then docker tag "$OLD_API_ID" "${DOCKERHUB_USERNAME}/civil-calc-api:rollback"; fi
+          if [ -n "$OLD_WEB_ID" ]; then docker tag "$OLD_WEB_ID" "${DOCKERHUB_USERNAME}/civil-calc-web:rollback"; fi
+
+          echo "==> Pulling new images (tag: ${IMAGE_TAG})"
+          $COMPOSE pull
+
+          echo "==> Starting new containers"
+          $COMPOSE up -d --remove-orphans
+
+          # ── Wait for api + web healthchecks to pass ──
+          deploy_ok=true
+          for svc in civil-calc-api civil-calc-web; do
+            echo "==> Waiting for $svc to become healthy..."
+            tries=0
+            until [ "$(docker inspect --format='{{.State.Health.Status}}' "$svc" 2>/dev/null)" = "healthy" ]; do
+              tries=$((tries + 1))
+              if [ "$tries" -ge 20 ]; then
+                echo "!! $svc did not become healthy in time"
+                deploy_ok=false
+                break
+              fi
+              sleep 3
+            done
+          done
+
+          if [ "$deploy_ok" = true ]; then
+            echo "==> Deployment healthy. Cleaning up dangling images."
+            docker image prune -f
+            # Drop the rollback snapshot now that the new version is confirmed good.
+            docker rmi "${DOCKERHUB_USERNAME}/civil-calc-api:rollback" 2>/dev/null || true
+            docker rmi "${DOCKERHUB_USERNAME}/civil-calc-web:rollback" 2>/dev/null || true
+          else
+            echo "==> Deployment unhealthy — rolling back to previous version."
+            docker logs --tail 50 civil-calc-api || true
+            docker logs --tail 50 civil-calc-web || true
+            if [ -n "$OLD_API_ID" ] || [ -n "$OLD_WEB_ID" ]; then
+              IMAGE_TAG=rollback $COMPOSE up -d --remove-orphans
+            fi
+            echo "Rollback complete. Failing the workflow so it gets attention."
+            exit 1
+          fi
