@@ -60,7 +60,7 @@ const AuthPage = () => {
 
                 <div>
                     <h1 className="text-2xl font-bold font-sans text-gray-900 leading-tight">Civil Calc App</h1>
-                    <p className="text-sm text-gray-500">Engineering design made simple.</p>
+                    <p className="text-sm text-gray-500">123 Engineering design made simple.</p>
                 </div>
             </div>
 
