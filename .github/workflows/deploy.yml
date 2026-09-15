@@ -55,17 +55,21 @@ jobs:
 
           # Docker Hub's tag-listing API needs a short-lived JWT, obtained by
           # exchanging the username + access token via the login endpoint.
+          # "|| true" guards below: on the very first-ever run the repo has
+          # no version tags yet, so grep legitimately finds no match and
+          # exits 1 — under pipefail that would otherwise abort the script
+          # before the "no tags yet -> start at v1" fallback below runs.
           HUB_TOKEN=$(curl -s -H "Content-Type: application/json" -X POST \
             -d "{\"username\": \"${DOCKERHUB_USERNAME}\", \"password\": \"${DOCKERHUB_TOKEN}\"}" \
-            https://hub.docker.com/v2/users/login/ | jq -r '.token // empty')
+            https://hub.docker.com/v2/users/login/ | jq -r '.token // empty') || true
 
-          LAST=$(curl -s -H "Authorization: Bearer ${HUB_TOKEN}" \
+          LAST=$( (curl -s -H "Authorization: Bearer ${HUB_TOKEN}" \
             "https://hub.docker.com/v2/repositories/${DOCKERHUB_USERNAME}/civil-calc-api/tags?page_size=100" \
             | jq -r '.results[]?.name // empty' \
             | grep -E '^v[0-9]+$' \
             | sed 's/^v//' \
             | sort -n \
-            | tail -1)
+            | tail -1) || true )
 
           if [ -z "$LAST" ]; then
             NEXT=1
