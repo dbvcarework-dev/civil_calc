@@ -108,20 +108,30 @@ jobs:
           cache-from: type=gha,scope=web
           cache-to: type=gha,mode=max,scope=web
 
+      - name: Upload compose file for deploy job
+        uses: actions/upload-artifact@v4
+        with:
+          name: compose-file
+          path: docker-compose.hub.yml
+          retention-days: 1
+
   # ════════════════════════════════════════════════════════════════
   # JOB 2: Deploy directly on the app server.
   # Runs on a SELF-HOSTED runner installed on the 192.168.13.123 box
   # (or another machine on that private LAN) — GitHub-hosted runners
   # cannot reach a private IP, so no SSH hop is needed or used here;
   # the job executes locally where docker/docker compose already live.
-  # Depends on build-and-push succeeding first.
+  # No full checkout — only the compose file is needed, pulled via
+  # artifact from the build job to avoid cloning the entire codebase.
   # ════════════════════════════════════════════════════════════════
   deploy:
     needs: build-and-push
     runs-on: [self-hosted, civil-calc]
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Download compose file
+        uses: actions/download-artifact@v4
+        with:
+          name: compose-file
 
       # Keep the server's compose file in sync with what's in git, without
       # touching anything else already in the deploy directory (.env,
