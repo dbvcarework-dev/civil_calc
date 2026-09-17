@@ -108,12 +108,6 @@ jobs:
           cache-from: type=gha,scope=web
           cache-to: type=gha,mode=max,scope=web
 
-      - name: Upload compose file for deploy job
-        uses: actions/upload-artifact@v4
-        with:
-          name: compose-file
-          path: docker-compose.hub.yml
-          retention-days: 1
 
   # ════════════════════════════════════════════════════════════════
   # JOB 2: Deploy directly on the app server.
@@ -128,10 +122,11 @@ jobs:
     needs: build-and-push
     runs-on: [self-hosted, civil-calc]
     steps:
-      - name: Download compose file
-        uses: actions/download-artifact@v4
+      - name: Checkout compose file only
+        uses: actions/checkout@v4
         with:
-          name: compose-file
+          sparse-checkout: docker-compose.hub.yml
+          sparse-checkout-cone-mode: false
 
       # Old pipeline runs used actions/checkout which left the full codebase
       # on this runner. Now that we only need the compose file, clean up any
