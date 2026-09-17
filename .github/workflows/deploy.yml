@@ -133,6 +133,31 @@ jobs:
         with:
           name: compose-file
 
+      # Old pipeline runs used actions/checkout which left the full codebase
+      # on this runner. Now that we only need the compose file, clean up any
+      # leftover repo files (client/, server/, .git/, etc.) if they exist.
+      - name: Clean up leftover codebase from old checkout runs
+        run: |
+          set -euo pipefail
+          WORKSPACE="${GITHUB_WORKSPACE}"
+
+          # Count items that are NOT the compose file we just downloaded
+          LEFTOVER=$(find "$WORKSPACE" -maxdepth 1 \
+            ! -name 'docker-compose.hub.yml' \
+            ! -path "$WORKSPACE" \
+            2>/dev/null | head -1)
+
+          if [ -n "$LEFTOVER" ]; then
+            echo "==> Found leftover files from old checkout — cleaning up"
+            find "$WORKSPACE" -maxdepth 1 \
+              ! -name 'docker-compose.hub.yml' \
+              ! -path "$WORKSPACE" \
+              -exec rm -rf {} +
+            echo "==> Cleanup complete"
+          else
+            echo "==> Workspace clean — no leftover codebase found"
+          fi
+
       # Keep the server's compose file in sync with what's in git, without
       # touching anything else already in the deploy directory (.env,
       # TLS certs). Source of truth in the repo is docker-compose.hub.yml;
